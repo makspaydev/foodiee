@@ -241,6 +241,10 @@ export default function App() {
           checked={checked}
           onToggle={toggleChecked}
           onClearChecks={() => setChecked(new Set())}
+          onClearList={() => {
+            setOnList(new Set())
+            setChecked(new Set())
+          }}
           onClose={() => setShowList(false)}
         />
       )}

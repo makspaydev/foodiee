@@ -923,6 +923,15 @@ body {
   margin-top: 0;
 }
 
+.link-danger {
+  color: #c0392b;
+  margin-left: auto;
+}
+
+.link-danger:hover {
+  color: #a93226;
+}
+
 .btn-instamart {
   background: #f5a623;
 }

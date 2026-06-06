@@ -6,6 +6,7 @@ export default function ShoppingList({
   checked,
   onToggle,
   onClearChecks,
+  onClearList,
   onClose,
 }) {
   const [copied, setCopied] = useState(false)
@@ -22,6 +23,16 @@ export default function ShoppingList({
   }, [onClose])
 
   const remaining = items.filter((i) => !checked.has(i.key))
+
+  const clearList = () => {
+    if (
+      window.confirm(
+        'Clear your whole shopping list? This removes every recipe from the list.',
+      )
+    ) {
+      onClearList()
+    }
+  }
 
   const copyList = async () => {
     // Copy the still-needed items as a plain bullet list.
@@ -120,6 +131,9 @@ export default function ShoppingList({
                   Uncheck all
                 </button>
               )}
+              <button className="link-btn link-danger" onClick={clearList}>
+                🗑 Clear list
+              </button>
             </div>
             <p className="list-hint">
               “Send to Instamart” copies a ready-to-paste instruction. Paste it into Claude
