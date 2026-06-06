@@ -359,7 +359,22 @@ function Planner({ plan, onPlan, onClear, onOpen }) {
                 </span>
                 {r ? (
                   <button className="plan-pick" onClick={() => onOpen(r)} style={{ '--c': r.color }}>
-                    <span className="plan-pick-emoji">{r.emoji}</span>
+                    <span className="plan-pick-emoji">
+                      {IMAGES[r.id] ? (
+                        <img
+                          className="plan-pick-img"
+                          src={imageSrc(IMAGES[r.id])}
+                          alt={r.title}
+                          onError={(e) => {
+                            e.currentTarget.replaceWith(
+                              document.createTextNode(r.emoji),
+                            )
+                          }}
+                        />
+                      ) : (
+                        r.emoji
+                      )}
+                    </span>
                     <span className="plan-pick-info">
                       <strong>{r.title}</strong>
                       <small>
