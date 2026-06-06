@@ -1054,6 +1054,14 @@ body {
   font-weight: 800;
 }
 
+.hiw-why {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
 .hiw-note {
   margin: 22px 0 0;
   padding: 13px 15px;

@@ -53,12 +53,9 @@ export default function HowItWorks({ onClose }) {
             <h3>🚚 Order the groceries</h3>
             <ol className="hiw-steps hiw-steps-cont">
               <li>
-                <strong>Send to Instamart.</strong> Tap the button — it copies a
-                ready-to-paste instruction to your clipboard.
-              </li>
-              <li>
-                <strong>Paste into Claude</strong> in a chat that has the{' '}
-                <strong>Swiggy Instamart</strong> connector enabled.
+                <strong>Send to Instamart → paste into Claude.</strong> Tap the button to
+                copy a ready-to-paste instruction, then paste it into a Claude chat that
+                has the <strong>Swiggy Instamart</strong> connector enabled.
               </li>
               <li>
                 <strong>Confirm.</strong> Claude searches Instamart, builds the cart, shows
@@ -66,6 +63,11 @@ export default function HowItWorks({ onClose }) {
                 Cash-on-Delivery order.
               </li>
             </ol>
+
+            <p className="hiw-why">
+              Why the hand-off? Swiggy only lets approved apps like Claude place orders, so
+              Foodiee prepares the list and Claude does the ordering — with your confirmation.
+            </p>
           </section>
 
           <p className="hiw-note">
