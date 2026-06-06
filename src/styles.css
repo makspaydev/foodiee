@@ -384,10 +384,21 @@ body {
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.18));
 }
 
+/* Real/AI photo overlays the gradient; emoji shows through only if it fails. */
+.card-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
 .card-appliance {
   position: absolute;
   bottom: 10px;
   left: 10px;
+  z-index: 2;
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
   font-size: 11.5px;
@@ -682,10 +693,20 @@ body {
 }
 
 .modal-hero {
+  position: relative;
   height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+.modal-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .modal-emoji {

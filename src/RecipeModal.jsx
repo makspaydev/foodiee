@@ -1,5 +1,8 @@
 import { useEffect } from 'react'
 import { MEALS, APPLIANCES } from './recipes.js'
+import { IMAGED } from './imageManifest.js'
+
+const imageSrc = (id) => `${import.meta.env.BASE_URL}images/${id}.jpg`
 
 export default function RecipeModal({
   recipe,
@@ -45,6 +48,16 @@ export default function RecipeModal({
         </button>
 
         <div className="modal-hero" style={{ background: recipe.color }}>
+          {IMAGED.has(recipe.id) && (
+            <img
+              className="modal-photo"
+              src={imageSrc(recipe.id)}
+              alt={recipe.title}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          )}
           <span className="modal-emoji">{recipe.emoji}</span>
         </div>
 
