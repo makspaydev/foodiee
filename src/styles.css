@@ -124,6 +124,26 @@ body {
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+.help-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.help-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .list-btn {
   position: relative;
   display: inline-flex;
@@ -960,6 +980,88 @@ body {
 
 .list-hint strong {
   color: var(--ink);
+}
+
+/* ---------------- How it works ---------------- */
+.hiw-modal {
+  max-width: 560px;
+}
+
+.hiw-body {
+  padding: 24px 26px 28px;
+}
+
+.hiw-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  padding-right: 40px;
+}
+
+.hiw-sub {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.hiw-section {
+  margin-top: 22px;
+}
+
+.hiw-section h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.hiw-steps {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.hiw-steps li {
+  padding-left: 4px;
+}
+
+.hiw-steps li::marker {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+/* Continue numbering 4–6 in the second list. */
+.hiw-steps-cont {
+  counter-reset: hiw 3;
+  list-style: none;
+  padding-left: 26px;
+}
+
+.hiw-steps-cont li {
+  position: relative;
+  padding-left: 4px;
+}
+
+.hiw-steps-cont li::before {
+  counter-increment: hiw;
+  content: counter(hiw) '.';
+  position: absolute;
+  left: -22px;
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.hiw-note {
+  margin: 22px 0 0;
+  padding: 13px 15px;
+  background: var(--bg);
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-soft);
 }
 
 /* ---------------- Responsive ---------------- */

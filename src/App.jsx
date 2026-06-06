@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { recipes, MEALS, APPLIANCES, ALL_TAGS } from './recipes.js'
 import RecipeModal from './RecipeModal.jsx'
 import ShoppingList from './ShoppingList.jsx'
+import HowItWorks from './HowItWorks.jsx'
 
 const FAV_KEY = 'foodiee:favorites'
 const LIST_KEY = 'foodiee:list'
@@ -25,6 +26,7 @@ export default function App() {
   const [selected, setSelected] = useState(null) // recipe shown in modal
   const [plan, setPlan] = useState(null) // { breakfast, lunch, dinner }
   const [showList, setShowList] = useState(false) // shopping list open?
+  const [showHelp, setShowHelp] = useState(false) // "how it works" open?
 
   // Favorites, persisted to localStorage.
   const [favorites, setFavorites] = useState(() => {
@@ -167,6 +169,7 @@ export default function App() {
         count={recipes.length}
         listCount={onList.size}
         onOpenList={() => setShowList(true)}
+        onOpenHelp={() => setShowHelp(true)}
       />
 
       <main className="container">
@@ -248,11 +251,13 @@ export default function App() {
           onClose={() => setShowList(false)}
         />
       )}
+
+      {showHelp && <HowItWorks onClose={() => setShowHelp(false)} />}
     </div>
   )
 }
 
-function Header({ query, setQuery, count, listCount, onOpenList }) {
+function Header({ query, setQuery, count, listCount, onOpenList, onOpenHelp }) {
   return (
     <header className="header">
       <div className="container header-inner">
@@ -276,6 +281,14 @@ function Header({ query, setQuery, count, listCount, onOpenList }) {
               aria-label="Search recipes"
             />
           </div>
+          <button
+            className="help-btn"
+            onClick={onOpenHelp}
+            aria-label="How it works"
+            title="How it works"
+          >
+            ?
+          </button>
           <button className="list-btn" onClick={onOpenList} aria-label="Open shopping list">
             🛒
             <span className="list-btn-text">List</span>
