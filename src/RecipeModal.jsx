@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { MEALS, APPLIANCES } from './recipes.js'
 import { IMAGES } from './imageManifest.js'
+import { AFFILIATE_ENABLED, buyUrl, productName } from './affiliate.js'
 
 const imageSrc = (file) => `${import.meta.env.BASE_URL}images/${file}`
 
@@ -90,6 +91,17 @@ export default function RecipeModal({
             <Stat label="Difficulty" value={recipe.difficulty} />
             <Stat label="Serves" value={recipe.servings} />
           </div>
+
+          {AFFILIATE_ENABLED && (
+            <a
+              className="buy-appliance"
+              href={buyUrl(recipe.appliance)}
+              target="_blank"
+              rel="sponsored nofollow noopener noreferrer"
+            >
+              🛒 Don't have one? Get the {productName(recipe.appliance)} on Amazon →
+            </a>
+          )}
 
           <div className="modal-columns">
             <section className="modal-section">

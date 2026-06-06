@@ -4,6 +4,7 @@ import RecipeModal from './RecipeModal.jsx'
 import ShoppingList from './ShoppingList.jsx'
 import HowItWorks from './HowItWorks.jsx'
 import { IMAGES } from './imageManifest.js'
+import { AFFILIATE_ENABLED, buyUrl, productName, DISCLOSURE } from './affiliate.js'
 
 // Path to an image file (served from public/images). Base-path safe.
 export const imageSrc = (file) => `${import.meta.env.BASE_URL}images/${file}`
@@ -223,9 +224,30 @@ export default function App() {
       </main>
 
       <footer className="footer">
+        {AFFILIATE_ENABLED && (
+          <div className="footer-gear">
+            <h4>🍳 The appliances behind these recipes</h4>
+            <div className="gear-links">
+              <a
+                href={buyUrl('airfryer')}
+                target="_blank"
+                rel="sponsored nofollow noopener noreferrer"
+              >
+                🌀 {productName('airfryer')}
+              </a>
+              <a
+                href={buyUrl('steamer')}
+                target="_blank"
+                rel="sponsored nofollow noopener noreferrer"
+              >
+                ♨️ {productName('steamer')}
+              </a>
+            </div>
+            <p className="disclosure">{DISCLOSURE}</p>
+          </div>
+        )}
         <p>
-          🍳 Foodiee — internal recipe collection for our{' '}
-          <strong>Philips Airfryer</strong> &amp;{' '}
+          🍳 Foodiee — recipes for the <strong>Philips Airfryer</strong> &amp;{' '}
           <strong>Wipro Multi Cooker</strong>.
         </p>
       </footer>
