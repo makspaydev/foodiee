@@ -5,19 +5,21 @@
 // the contextual "Get it on Amazon" links and the footer "Our appliances"
 // section will appear automatically.
 
-export const AFFILIATE_ENABLED = false // ← flip to true once tag + URLs are set
+export const AFFILIATE_ENABLED = true
 
-export const AMAZON_TAG = 'foodiee-21' // ← replace with your real Associates tag
+export const AMAZON_TAG = 'foodiee03-21'
 
 // Base amazon.in product pages (without the tag — it's appended automatically).
 const PRODUCTS = {
   airfryer: {
+    // Philips Airfryer 4.1L RapidAir, dial control (HD9200/90)
     name: 'Philips Airfryer',
-    url: 'https://www.amazon.in/dp/REPLACE_WITH_AIRFRYER_ASIN',
+    url: 'https://www.amazon.in/dp/B09CTWFV5W',
   },
   steamer: {
+    // Wipro Elato BE201 4-in-1 Multicooker / Egg Boiler
     name: 'Wipro Multi Cooker',
-    url: 'https://www.amazon.in/dp/REPLACE_WITH_STEAMER_ASIN',
+    url: 'https://www.amazon.in/dp/B0DD4DJ852',
   },
 }
 
