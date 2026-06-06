@@ -1,7 +1,14 @@
 import { useEffect } from 'react'
 import { MEALS, APPLIANCES } from './recipes.js'
 
-export default function RecipeModal({ recipe, onClose, isFav, onToggleFav }) {
+export default function RecipeModal({
+  recipe,
+  onClose,
+  isFav,
+  onToggleFav,
+  isOnList,
+  onToggleList,
+}) {
   // Close on Escape and lock body scroll while open.
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -52,6 +59,16 @@ export default function RecipeModal({ recipe, onClose, isFav, onToggleFav }) {
 
           <h2 className="modal-title">{recipe.title}</h2>
           <p className="modal-cuisine">{recipe.cuisine} cuisine</p>
+
+          <button
+            className={`btn list-toggle${isOnList ? ' on' : ''}`}
+            onClick={onToggleList}
+            aria-pressed={isOnList}
+          >
+            {isOnList
+              ? '✓ On your shopping list — tap to remove'
+              : '🛒 Add ingredients to shopping list'}
+          </button>
 
           <div className="modal-stats">
             <Stat label="Appliance" value={`${appliance.emoji} ${appliance.full}`} />

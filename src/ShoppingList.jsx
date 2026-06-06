@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 export default function ShoppingList({
   items,
-  favCount,
+  listCount,
   checked,
   onToggle,
   onClearChecks,
@@ -66,9 +66,9 @@ export default function ShoppingList({
           <div>
             <h2 className="list-title">🛒 Shopping List</h2>
             <p className="list-sub">
-              {favCount === 0
-                ? 'No saved recipes yet'
-                : `Combined from ${favCount} saved ${favCount === 1 ? 'recipe' : 'recipes'} · ${remaining.length} to buy`}
+              {listCount === 0
+                ? 'Nothing on your list yet'
+                : `Combined from ${listCount} ${listCount === 1 ? 'recipe' : 'recipes'} · ${remaining.length} to buy`}
             </p>
           </div>
           <button className="modal-close list-close" onClick={onClose} aria-label="Close">
@@ -80,7 +80,7 @@ export default function ShoppingList({
           <div className="list-empty">
             <span className="empty-emoji">🧺</span>
             <h3>Your list is empty</h3>
-            <p>Tap the heart on recipes you want to cook, and their ingredients show up here automatically.</p>
+            <p>Open a recipe and tap <strong>🛒 Add ingredients to shopping list</strong> (or the cart icon on a recipe card) — its ingredients show up here automatically.</p>
           </div>
         ) : (
           <>

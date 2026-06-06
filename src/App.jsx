@@ -4,6 +4,7 @@ import RecipeModal from './RecipeModal.jsx'
 import ShoppingList from './ShoppingList.jsx'
 
 const FAV_KEY = 'foodiee:favorites'
+const LIST_KEY = 'foodiee:list'
 const CHECKED_KEY = 'foodiee:checked'
 
 // Pick a random recipe matching a meal from a candidate list.
@@ -34,6 +35,15 @@ export default function App() {
     }
   })
 
+  // Recipes whose ingredients are on the shopping list — independent of favorites.
+  const [onList, setOnList] = useState(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(LIST_KEY) || '[]'))
+    } catch {
+      return new Set()
+    }
+  })
+
   // Checked-off shopping items, persisted to localStorage.
   const [checked, setChecked] = useState(() => {
     try {
@@ -48,8 +58,19 @@ export default function App() {
   }, [favorites])
 
   useEffect(() => {
+    localStorage.setItem(LIST_KEY, JSON.stringify([...onList]))
+  }, [onList])
+
+  useEffect(() => {
     localStorage.setItem(CHECKED_KEY, JSON.stringify([...checked]))
   }, [checked])
+
+  const toggleList = (id) =>
+    setOnList((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
 
   const toggleChecked = (key) =>
     setChecked((prev) => {
@@ -58,11 +79,12 @@ export default function App() {
       return next
     })
 
-  // Combine ingredients across all favorited recipes into one de-duplicated list.
+  // Combine ingredients across all recipes on the shopping list into one
+  // de-duplicated list.
   const shoppingItems = useMemo(() => {
     const map = new Map()
     for (const r of recipes) {
-      if (!favorites.has(r.id)) continue
+      if (!onList.has(r.id)) continue
       for (const ing of r.ingredients) {
         const key = ing.trim().toLowerCase()
         if (!map.has(key)) {
@@ -76,7 +98,7 @@ export default function App() {
     return [...map.values()]
       .map((i) => ({ ...i, sources: [...i.sources] }))
       .sort((a, b) => a.text.localeCompare(b.text))
-  }, [favorites])
+  }, [onList])
 
   const toggleFavorite = (id) =>
     setFavorites((prev) => {
@@ -143,7 +165,7 @@ export default function App() {
         query={query}
         setQuery={setQuery}
         count={recipes.length}
-        listCount={favorites.size}
+        listCount={onList.size}
         onOpenList={() => setShowList(true)}
       />
 
@@ -184,6 +206,8 @@ export default function App() {
                 recipe={r}
                 isFav={favorites.has(r.id)}
                 onToggleFav={() => toggleFavorite(r.id)}
+                isOnList={onList.has(r.id)}
+                onToggleList={() => toggleList(r.id)}
                 onOpen={() => setSelected(r)}
               />
             ))}
@@ -204,6 +228,8 @@ export default function App() {
           recipe={selected}
           isFav={favorites.has(selected.id)}
           onToggleFav={() => toggleFavorite(selected.id)}
+          isOnList={onList.has(selected.id)}
+          onToggleList={() => toggleList(selected.id)}
           onClose={() => setSelected(null)}
         />
       )}
@@ -211,7 +237,7 @@ export default function App() {
       {showList && (
         <ShoppingList
           items={shoppingItems}
-          favCount={favorites.size}
+          listCount={onList.size}
           checked={checked}
           onToggle={toggleChecked}
           onClearChecks={() => setChecked(new Set())}
@@ -392,7 +418,7 @@ function Chip({ active, onClick, children, small }) {
   )
 }
 
-function RecipeCard({ recipe, onOpen, isFav, onToggleFav }) {
+function RecipeCard({ recipe, onOpen, isFav, onToggleFav, isOnList, onToggleList }) {
   const appliance = APPLIANCES[recipe.appliance]
   return (
     <article className="card-wrap">
@@ -422,16 +448,28 @@ function RecipeCard({ recipe, onOpen, isFav, onToggleFav }) {
           </div>
         </div>
       </button>
-      <button
-        className={`fav-btn${isFav ? ' fav-on' : ''}`}
-        onClick={onToggleFav}
-        type="button"
-        aria-pressed={isFav}
-        aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
-        title={isFav ? 'Remove from favorites' : 'Add to favorites'}
-      >
-        {isFav ? '❤️' : '🤍'}
-      </button>
+      <div className="card-actions">
+        <button
+          className={`icon-btn cart-btn${isOnList ? ' cart-on' : ''}`}
+          onClick={onToggleList}
+          type="button"
+          aria-pressed={isOnList}
+          aria-label={isOnList ? 'Remove from shopping list' : 'Add to shopping list'}
+          title={isOnList ? 'Remove from shopping list' : 'Add ingredients to shopping list'}
+        >
+          {isOnList ? '✓' : '🛒'}
+        </button>
+        <button
+          className={`icon-btn fav-btn${isFav ? ' fav-on' : ''}`}
+          onClick={onToggleFav}
+          type="button"
+          aria-pressed={isFav}
+          aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
+          title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          {isFav ? '❤️' : '🤍'}
+        </button>
+      </div>
     </article>
   )
 }

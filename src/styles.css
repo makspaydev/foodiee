@@ -295,17 +295,23 @@ body {
   box-shadow: 0 14px 36px rgba(60, 40, 20, 0.16);
 }
 
-/* Favorite heart button (shared by cards and modal) */
-.fav-btn {
+/* Card action buttons: cart + favourite, side by side at the card's top-right. */
+.card-actions {
   position: absolute;
   top: 10px;
   right: 10px;
   z-index: 2;
+  display: flex;
+  gap: 6px;
+}
+
+.icon-btn {
   width: 34px;
   height: 34px;
   border-radius: 999px;
   border: none;
   background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
@@ -316,13 +322,24 @@ body {
   transition: transform 0.12s ease, background 0.12s ease;
 }
 
-.fav-btn:hover {
+.icon-btn:hover {
   transform: scale(1.12);
   background: #fff;
 }
 
 .fav-btn.fav-on {
   animation: pop-heart 0.25s ease;
+}
+
+/* Cart toggle "on" state: solid accent with a white check. */
+.cart-btn.cart-on {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+}
+
+.cart-btn.cart-on:hover {
+  background: var(--accent);
 }
 
 @keyframes pop-heart {
@@ -675,9 +692,24 @@ body {
 }
 
 .modal-cuisine {
-  margin: 2px 0 18px;
+  margin: 2px 0 16px;
   color: var(--ink-soft);
   font-size: 14px;
+}
+
+/* Prominent "add to shopping list" toggle inside the recipe modal. */
+.list-toggle {
+  margin: 0 0 20px;
+  width: 100%;
+}
+
+.list-toggle.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.list-toggle.on:hover {
+  background: #ffdccd;
 }
 
 .modal-stats {
