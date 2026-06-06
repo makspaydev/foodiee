@@ -23,6 +23,9 @@ export default function ShoppingList({
   }, [onClose])
 
   const remaining = items.filter((i) => !checked.has(i.key))
+  // Only count checks against items currently on the list, so "Uncheck all"
+  // never appears because of stale keys left over from removed recipes.
+  const checkedCount = items.length - remaining.length
 
   const clearList = () => {
     if (
@@ -126,7 +129,7 @@ export default function ShoppingList({
               <button className="btn btn-ghost" onClick={copyList}>
                 {copied ? '✓ Copied!' : '📋 Copy list'}
               </button>
-              {checked.size > 0 && (
+              {checkedCount > 0 && (
                 <button className="link-btn" onClick={onClearChecks}>
                   Uncheck all
                 </button>
