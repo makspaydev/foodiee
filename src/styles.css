@@ -988,7 +988,23 @@ body {
 
   .modal {
     border-radius: 0;
-    min-height: 100%;
+  }
+
+  /* Recipe modal: full-screen and internally scrollable on mobile.
+     Previously align-items:stretch + the modal's overflow:hidden trapped
+     tall content (e.g. long method steps) and made it unscrollable. */
+  .modal:not(.list-modal) {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: none;
+  }
+
+  /* Keep the close / favourite controls pinned to the viewport corner
+     while the content scrolls beneath them. */
+  .modal:not(.list-modal) .modal-close,
+  .modal:not(.list-modal) .modal-fav {
+    position: fixed;
   }
 
   .modal-body {
@@ -997,6 +1013,7 @@ body {
 
   .list-modal {
     border-radius: 0;
+    min-height: 100%;
     padding: 20px 18px 24px;
   }
 
