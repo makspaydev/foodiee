@@ -1,30 +1,52 @@
 #!/usr/bin/env node
 /*
- * Generate AI food photos for Foodiee recipes using the OpenAI Images API.
+ * Generate AI food photos for Foodiee recipes.
+ *
+ * Provider is auto-detected from whichever key is set (override with IMAGE_PROVIDER):
+ *   - Gemini  (GEMINI_API_KEY)  — Google AI Studio, model gemini-2.5-flash-image
+ *   - OpenAI  (OPENAI_API_KEY)  — model gpt-image-1
+ *
+ * Keys are read from the environment OR from a local .env.local / .env file
+ * (gitignored), e.g. a file containing:  GEMINI_API_KEY=AIza...
  *
  * Usage:
- *   OPENAI_API_KEY=sk-...  node scripts/generate-images.mjs viral     # just the 10 viral recipes (pilot)
- *   OPENAI_API_KEY=sk-...  node scripts/generate-images.mjs all       # every recipe
- *   OPENAI_API_KEY=sk-...  node scripts/generate-images.mjs id1,id2   # specific recipe ids
+ *   node scripts/generate-images.mjs viral     # the 10 viral recipes (pilot)
+ *   node scripts/generate-images.mjs all       # every recipe
+ *   node scripts/generate-images.mjs id1,id2   # specific ids
  *
- * Output: public/images/<id>.jpg  +  refreshes src/imageManifest.js
- *
- * Model: gpt-image-1 (JPEG output). Override with IMAGE_MODEL if needed.
- * Note: gpt-image-1 may require a one-time org verification on your OpenAI account.
+ * Output: public/images/<id>.<ext>  +  refreshes src/imageManifest.js
  */
-import { writeFile, mkdir, readdir } from 'node:fs/promises'
+import { writeFile, mkdir, readdir, readFile, unlink } from 'node:fs/promises'
 import { recipes } from '../src/recipes.js'
 
-const API_KEY = process.env.OPENAI_API_KEY
-const MODEL = process.env.IMAGE_MODEL || 'gpt-image-1'
-const OUT_DIR = new URL('../public/images/', import.meta.url)
-const MANIFEST = new URL('../src/imageManifest.js', import.meta.url)
+const ROOT = new URL('../', import.meta.url)
+const OUT_DIR = new URL('public/images/', ROOT)
+const MANIFEST = new URL('src/imageManifest.js', ROOT)
 
-if (!API_KEY) {
-  console.error('✗ Set OPENAI_API_KEY (e.g. OPENAI_API_KEY=sk-... node scripts/generate-images.mjs viral)')
+// --- load .env.local / .env (simple parser, no dependency) ---
+for (const name of ['.env.local', '.env']) {
+  try {
+    const txt = await readFile(new URL(name, ROOT), 'utf8')
+    for (const line of txt.split('\n')) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/)
+      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '')
+    }
+  } catch {
+    /* file may not exist */
+  }
+}
+
+// --- pick provider ---
+const provider =
+  process.env.IMAGE_PROVIDER ||
+  (process.env.GEMINI_API_KEY ? 'gemini' : process.env.OPENAI_API_KEY ? 'openai' : null)
+
+if (!provider) {
+  console.error('✗ No API key found. Put GEMINI_API_KEY=... in a .env.local file (gitignored).')
   process.exit(1)
 }
 
+// --- pick targets ---
 const arg = (process.argv[2] || 'viral').trim()
 let targets
 if (arg === 'all') targets = recipes
@@ -33,67 +55,109 @@ else {
   const ids = new Set(arg.split(',').map((s) => s.trim()))
   targets = recipes.filter((r) => ids.has(r.id))
 }
-
 if (!targets.length) {
   console.error(`✗ No recipes matched "${arg}".`)
   process.exit(1)
 }
 
-await mkdir(OUT_DIR, { recursive: true })
-console.log(`Generating ${targets.length} image(s) with ${MODEL}…\n`)
-
 const prompt = (r) =>
   `Professional overhead food photography of "${r.title}", ${r.cuisine} cuisine. ` +
   `Beautifully plated and garnished on a clean light neutral background, soft natural ` +
-  `lighting, shallow depth of field, fresh and appetising, high detail, realistic. ` +
+  `lighting, shallow depth of field, fresh and appetising, realistic, high detail. ` +
   `No text, no labels, no hands, no people.`
+
+const sleep = (ms) => new Promise((res) => setTimeout(res, ms))
+const extFor = (mime) =>
+  ({ 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }[mime] || 'png')
+
+// --- provider calls: return { b64, mime } ---
+async function genGemini(r) {
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash-image'
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt(r) }] }],
+      generationConfig: { responseModalities: ['IMAGE'] },
+    }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`)
+  const part = (data.candidates?.[0]?.content?.parts || []).find((p) => p.inlineData?.data)
+  if (!part) throw new Error('no image in response (possibly filtered)')
+  return { b64: part.inlineData.data, mime: part.inlineData.mimeType || 'image/png' }
+}
+
+async function genOpenAI(r) {
+  const model = process.env.IMAGE_MODEL || 'gpt-image-1'
+  const body = { model, prompt: prompt(r), size: '1024x1024', n: 1 }
+  if (model === 'gpt-image-1') {
+    body.output_format = 'jpeg'
+    body.output_compression = 80
+  } else body.response_format = 'b64_json'
+  const res = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`)
+  const b64 = data.data?.[0]?.b64_json
+  if (!b64) throw new Error('no image data returned')
+  return { b64, mime: model === 'gpt-image-1' ? 'image/jpeg' : 'image/png' }
+}
+
+const generate = provider === 'gemini' ? genGemini : genOpenAI
+
+await mkdir(OUT_DIR, { recursive: true })
+console.log(`Generating ${targets.length} image(s) via ${provider}…\n`)
 
 let ok = 0
 let failed = 0
 for (const r of targets) {
-  try {
-    const body = { model: MODEL, prompt: prompt(r), size: '1024x1024', n: 1 }
-    if (MODEL === 'gpt-image-1') {
-      body.output_format = 'jpeg'
-      body.output_compression = 80
-    } else {
-      body.response_format = 'b64_json' // dall-e-3 etc.
-    }
-
-    const res = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    const data = await res.json()
-    if (!res.ok) {
+  let attempt = 0
+  while (true) {
+    try {
+      const { b64, mime } = await generate(r)
+      // remove any stale file for this id, then write the new one
+      for (const e of ['png', 'jpg', 'jpeg', 'webp']) {
+        await unlink(new URL(`${r.id}.${e}`, OUT_DIR)).catch(() => {})
+      }
+      const file = `${r.id}.${extFor(mime)}`
+      await writeFile(new URL(file, OUT_DIR), Buffer.from(b64, 'base64'))
+      ok++
+      console.log(`✓ ${r.id}  (${file})`)
+      break
+    } catch (err) {
+      attempt++
+      const retryable = /429|rate|quota|5\d\d|timeout|fetch failed/i.test(err.message)
+      if (retryable && attempt < 4) {
+        const wait = 2000 * attempt
+        console.log(`  …${r.id} retry ${attempt} in ${wait / 1000}s (${err.message})`)
+        await sleep(wait)
+        continue
+      }
       failed++
-      console.error(`✗ ${r.id}: ${data.error?.message || res.status}`)
-      continue
+      console.error(`✗ ${r.id}: ${err.message}`)
+      break
     }
-    const b64 = data.data?.[0]?.b64_json
-    if (!b64) {
-      failed++
-      console.error(`✗ ${r.id}: no image data returned`)
-      continue
-    }
-    await writeFile(new URL(`${r.id}.jpg`, OUT_DIR), Buffer.from(b64, 'base64'))
-    ok++
-    console.log(`✓ ${r.id}`)
-  } catch (err) {
-    failed++
-    console.error(`✗ ${r.id}: ${err.message}`)
   }
+  await sleep(1500) // gentle throttle for free-tier rate limits
 }
 
-// Refresh the manifest from whatever image files now exist.
+// --- refresh manifest map { id: filename } from whatever files exist ---
 const files = await readdir(OUT_DIR)
-const ids = files.filter((f) => f.endsWith('.jpg')).map((f) => f.replace(/\.jpg$/, '')).sort()
+const map = {}
+for (const f of files.sort()) {
+  const m = f.match(/^(.+)\.(png|jpg|jpeg|webp)$/)
+  if (m) map[m[1]] = f
+}
 await writeFile(
   MANIFEST,
-  `// Auto-generated by scripts/generate-images.mjs — recipe ids that have an image\n` +
-    `// at public/images/<id>.jpg. Do not edit by hand; re-run the image script.\n` +
-    `export const IMAGED = new Set(${JSON.stringify(ids, null, 2)})\n`,
+  `// Auto-generated by scripts/generate-images.mjs — maps recipe id -> image filename\n` +
+    `// in public/images/. Do not edit by hand; re-run the image script.\n` +
+    `export const IMAGES = ${JSON.stringify(map, null, 2)}\n`,
 )
 
-console.log(`\nDone: ${ok} generated, ${failed} failed. ${ids.length} total image(s). Manifest updated.`)
+console.log(`\nDone: ${ok} generated, ${failed} failed. ${Object.keys(map).length} total image(s).`)

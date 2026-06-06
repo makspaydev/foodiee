@@ -3,10 +3,10 @@ import { recipes, MEALS, APPLIANCES, ALL_TAGS } from './recipes.js'
 import RecipeModal from './RecipeModal.jsx'
 import ShoppingList from './ShoppingList.jsx'
 import HowItWorks from './HowItWorks.jsx'
-import { IMAGED } from './imageManifest.js'
+import { IMAGES } from './imageManifest.js'
 
-// Path to a recipe's image (served from public/images). Base-path safe.
-export const imageSrc = (id) => `${import.meta.env.BASE_URL}images/${id}.jpg`
+// Path to an image file (served from public/images). Base-path safe.
+export const imageSrc = (file) => `${import.meta.env.BASE_URL}images/${file}`
 
 const FAV_KEY = 'foodiee:favorites'
 const LIST_KEY = 'foodiee:list'
@@ -445,10 +445,10 @@ function RecipeCard({ recipe, onOpen, isFav, onToggleFav, isOnList, onToggleList
     <article className="card-wrap">
       <button className="card" onClick={onOpen} type="button">
         <div className="card-hero" style={{ background: recipe.color }}>
-          {IMAGED.has(recipe.id) && (
+          {IMAGES[recipe.id] && (
             <img
               className="card-photo"
-              src={imageSrc(recipe.id)}
+              src={imageSrc(IMAGES[recipe.id])}
               alt={recipe.title}
               loading="lazy"
               onError={(e) => {
