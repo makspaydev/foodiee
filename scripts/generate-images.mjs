@@ -16,7 +16,9 @@
  *
  * Output: public/images/<id>.<ext>  +  refreshes src/imageManifest.js
  */
-import { writeFile, mkdir, readdir, readFile, unlink } from 'node:fs/promises'
+import { writeFile, mkdir, readdir, readFile, unlink, rename } from 'node:fs/promises'
+import { execFileSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { recipes } from '../src/recipes.js'
 
 const ROOT = new URL('../', import.meta.url)
@@ -110,6 +112,28 @@ async function genOpenAI(r) {
 
 const generate = provider === 'gemini' ? genGemini : genOpenAI
 
+// Save the image, optimising to a web-friendly JPEG via macOS `sips` when
+// available (≈1.8MB PNG -> ≈280KB JPEG). Falls back to the raw file otherwise.
+async function saveImage(id, buf, ext) {
+  const tmp = new URL(`${id}.orig.${ext}`, OUT_DIR)
+  await writeFile(tmp, buf)
+  const jpg = `${id}.jpg`
+  try {
+    execFileSync(
+      'sips',
+      ['-s', 'format', 'jpeg', '-s', 'formatOptions', '82', '-Z', '900',
+        fileURLToPath(tmp), '--out', fileURLToPath(new URL(jpg, OUT_DIR))],
+      { stdio: 'ignore' },
+    )
+    await unlink(tmp).catch(() => {})
+    return jpg
+  } catch {
+    const raw = `${id}.${ext}`
+    await rename(tmp, new URL(raw, OUT_DIR)).catch(() => {})
+    return raw
+  }
+}
+
 await mkdir(OUT_DIR, { recursive: true })
 console.log(`Generating ${targets.length} image(s) via ${provider}…\n`)
 
@@ -124,8 +148,7 @@ for (const r of targets) {
       for (const e of ['png', 'jpg', 'jpeg', 'webp']) {
         await unlink(new URL(`${r.id}.${e}`, OUT_DIR)).catch(() => {})
       }
-      const file = `${r.id}.${extFor(mime)}`
-      await writeFile(new URL(file, OUT_DIR), Buffer.from(b64, 'base64'))
+      const file = await saveImage(r.id, Buffer.from(b64, 'base64'), extFor(mime))
       ok++
       console.log(`✓ ${r.id}  (${file})`)
       break
