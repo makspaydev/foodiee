@@ -50,29 +50,20 @@ export default function HowItWorks({ onClose }) {
           </section>
 
           <section className="hiw-section">
-            <h3>🚚 Order the groceries</h3>
-            <ol className="hiw-steps hiw-steps-cont">
-              <li>
-                <strong>Send to Instamart → paste into Claude.</strong> Tap the button to
-                copy a ready-to-paste instruction, then paste it into a Claude chat that
-                has the <strong>Swiggy Instamart</strong> connector enabled.
-              </li>
-              <li>
-                <strong>Confirm.</strong> Claude searches Instamart, builds the cart, shows
-                the bill, and <strong>waits for your “yes”</strong> before placing a
-                Cash-on-Delivery order.
-              </li>
-            </ol>
-
-            <p className="hiw-why">
-              Why the hand-off? Swiggy only lets approved apps like Claude place orders, so
-              Foodiee prepares the list and Claude does the ordering — with your confirmation.
+            <h3>
+              🚚 Order the groceries <span className="badge-soon">Coming soon</span>
+            </h3>
+            <p className="hiw-soon-text">
+              One-tap ordering straight from <strong>Swiggy Instamart</strong> is on the way —
+              you'll connect your own Swiggy account and check out without leaving Foodiee.
+              For now, tap <strong>📋 Copy list</strong> in your shopping list and shop your
+              usual way.
             </p>
           </section>
 
           <p className="hiw-note">
-            🔒 Foodiee never places orders itself — it only prepares the list. 💡 Tip: batch
-            a few recipes together so the delivery fee is spread across a fuller basket.
+            🔒 Foodiee never places orders for you — when Instamart ordering arrives, you'll
+            review the cart and confirm every order yourself.
           </p>
         </div>
       </div>

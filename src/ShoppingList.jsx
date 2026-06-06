@@ -10,7 +10,6 @@ export default function ShoppingList({
   onClose,
 }) {
   const [copied, setCopied] = useState(false)
-  const [sent, setSent] = useState(false)
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -46,24 +45,6 @@ export default function ShoppingList({
       setTimeout(() => setCopied(false), 1600)
     } catch {
       setCopied(false)
-    }
-  }
-
-  // Build a paste-ready instruction for Claude + the Swiggy Instamart MCP connector.
-  // Foodiee only prepares the text — you review and place the order yourself in Claude.
-  const sendToInstamart = async () => {
-    const lines = remaining.map((i) => `• ${i.text}`).join('\n')
-    const prompt =
-      'Using the Swiggy Instamart connector, add these items to my cart. ' +
-      'Pick the closest matching product for each, then show me the full cart ' +
-      'with quantities and total and WAIT for my confirmation before checkout (COD).\n\n' +
-      `Shopping list:\n${lines}`
-    try {
-      await navigator.clipboard.writeText(prompt)
-      setSent(true)
-      setTimeout(() => setSent(false), 2200)
-    } catch {
-      setSent(false)
     }
   }
 
@@ -123,12 +104,13 @@ export default function ShoppingList({
             </ul>
 
             <div className="list-actions">
-              <button className="btn btn-instamart" onClick={sendToInstamart} disabled={remaining.length === 0}>
-                {sent ? '✓ Copied — paste into Claude' : '🛒 Send to Instamart'}
-              </button>
-              <button className="btn btn-ghost" onClick={copyList}>
+              <button className="btn" onClick={copyList}>
                 {copied ? '✓ Copied!' : '📋 Copy list'}
               </button>
+              <span className="instamart-soon" title="Order directly from Instamart — coming soon">
+                🛒 Order via Instamart
+                <span className="badge-soon">Coming soon</span>
+              </span>
               {checkedCount > 0 && (
                 <button className="link-btn" onClick={onClearChecks}>
                   Uncheck all
@@ -139,9 +121,8 @@ export default function ShoppingList({
               </button>
             </div>
             <p className="list-hint">
-              “Send to Instamart” copies a ready-to-paste instruction. Paste it into Claude
-              with the <strong>Swiggy Instamart</strong> connector enabled — it builds the cart
-              and waits for you to confirm before ordering. Foodiee never places orders itself.
+              📋 <strong>Copy list</strong> to shop your usual way. One-tap ordering straight
+              from <strong>Swiggy Instamart</strong> is on the way — coming soon.
             </p>
           </>
         )}
