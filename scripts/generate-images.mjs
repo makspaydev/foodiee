@@ -135,11 +135,26 @@ async function saveImage(id, buf, ext) {
 }
 
 await mkdir(OUT_DIR, { recursive: true })
-console.log(`Generating ${targets.length} image(s) via ${provider}…\n`)
+
+// Skip recipes that already have an image (resumable + cheap). Use FORCE=1 to redo.
+const force = process.env.FORCE === '1'
+const existing = new Set(
+  (await readdir(OUT_DIR))
+    .map((f) => f.match(/^(.+)\.(png|jpg|jpeg|webp)$/)?.[1])
+    .filter(Boolean),
+)
+const todo = force ? targets : targets.filter((r) => !existing.has(r.id))
+const skipped = targets.length - todo.length
+
+console.log(
+  `Generating ${todo.length} image(s) via ${provider}` +
+    (skipped ? ` (skipping ${skipped} already done; FORCE=1 to redo)` : '') +
+    `…\n`,
+)
 
 let ok = 0
 let failed = 0
-for (const r of targets) {
+for (const r of todo) {
   let attempt = 0
   while (true) {
     try {
