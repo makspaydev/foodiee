@@ -1154,10 +1154,32 @@ body {
     padding: 20px 18px 28px;
   }
 
+  /* Full-screen list modal as a flex column: header + actions stay put,
+     the items scroll in the middle so nothing (incl. the hint) gets clipped. */
   .list-modal {
     border-radius: 0;
-    min-height: 100%;
-    padding: 20px 18px 24px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 18px;
+  }
+
+  .list-modal .list-head {
+    flex-shrink: 0;
+  }
+
+  .list-modal .shopping-items {
+    max-height: none;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .list-modal .list-actions,
+  .list-modal .list-hint,
+  .list-modal .list-empty {
+    flex-shrink: 0;
   }
 
   .modal-title {
