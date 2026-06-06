@@ -1,5 +1,7 @@
 # 🍳 Foodiee
 
+**Live:** https://makspaydev.github.io/foodiee/
+
 An internal recipe site for our two kitchen gadgets:
 
 - **Philips Airfryer** (RapidAir) — air-fryer recipes, temperatures in °C
@@ -28,6 +30,16 @@ npm run preview    # preview the production build locally
 
 The `dist/` folder is a fully static site — drop it on any internal file share,
 intranet, or static host.
+
+## Deployment
+
+The site auto-deploys to **GitHub Pages** on every push to `main` via
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Just commit and
+push — the workflow builds and publishes within ~1 minute.
+
+Because Pages serves project sites from `/foodiee/`, the production build sets
+that base path automatically (see [`vite.config.js`](vite.config.js)); local dev
+still runs at root.
 
 ## Adding recipes
 
