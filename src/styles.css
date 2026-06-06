@@ -694,7 +694,7 @@ body {
 
 .modal-hero {
   position: relative;
-  height: 150px;
+  height: 210px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -710,7 +710,7 @@ body {
 }
 
 .modal-emoji {
-  font-size: 78px;
+  font-size: 104px;
   filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.2));
 }
 
