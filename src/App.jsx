@@ -4,6 +4,7 @@ import RecipeModal from './RecipeModal.jsx'
 import ShoppingList from './ShoppingList.jsx'
 import HowItWorks from './HowItWorks.jsx'
 import ImportRecipe, { extractInstagramUrl } from './ImportRecipe.jsx'
+import Pantry from './Pantry.jsx'
 import { ORDERING_ENABLED, recipeImage } from './backend.js'
 import { compressDataUrl } from './imageUtil.js'
 import { IMAGES } from './imageManifest.js'
@@ -17,6 +18,7 @@ const FAV_KEY = 'foodiee:favorites'
 const LIST_KEY = 'foodiee:list'
 const CHECKED_KEY = 'foodiee:checked'
 const IMPORTED_KEY = 'foodiee:imported'
+const PANTRY_KEY = 'foodiee:pantry'
 
 // Pre-filled email for the "Suggest a recipe" links.
 const SUGGEST_MAILTO =
@@ -44,6 +46,7 @@ export default function App() {
   const [plan, setPlan] = useState(null) // { breakfast, lunch, dinner }
   const [showList, setShowList] = useState(false) // shopping list open?
   const [showHelp, setShowHelp] = useState(false) // "how it works" open?
+  const [showPantry, setShowPantry] = useState(false) // pantry screen open?
   const [importState, setImportState] = useState(null) // { url, fromShare } | null
 
   // Favorites, persisted to localStorage.
@@ -83,6 +86,15 @@ export default function App() {
     }
   })
 
+  // Pantry: canonical ingredient names the user has on hand, persisted.
+  const [pantry, setPantry] = useState(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(PANTRY_KEY) || '[]'))
+    } catch {
+      return new Set()
+    }
+  })
+
   // Built-in catalog + anything the user imported (imported first so it's easy to find).
   const allRecipes = useMemo(() => [...importedRecipes, ...recipes], [importedRecipes])
 
@@ -112,6 +124,26 @@ export default function App() {
       /* storage full (e.g. many recipe images) — keep them in memory for this session */
     }
   }, [importedRecipes])
+
+  useEffect(() => {
+    localStorage.setItem(PANTRY_KEY, JSON.stringify([...pantry]))
+  }, [pantry])
+
+  const togglePantryItem = (canon) =>
+    setPantry((prev) => {
+      const next = new Set(prev)
+      next.has(canon) ? next.delete(canon) : next.add(canon)
+      return next
+    })
+
+  // Toggle a whole category: if everything's selected, clear it; else select all.
+  const togglePantryCategory = (catItems) =>
+    setPantry((prev) => {
+      const next = new Set(prev)
+      const allSelected = catItems.every((i) => next.has(i))
+      catItems.forEach((i) => (allSelected ? next.delete(i) : next.add(i)))
+      return next
+    })
 
   // Generate an AI food photo for an imported recipe in the background, then
   // slot it into the card + modal (progressive — the recipe is usable instantly).
@@ -282,6 +314,10 @@ export default function App() {
         listCount={onList.size}
         onOpenList={() => setShowList(true)}
         onOpenHelp={() => setShowHelp(true)}
+        onOpenPantry={() => {
+          setShowPantry(true)
+          track('pantry_opened', { location: 'header' })
+        }}
         onOpenImport={() => {
           setImportState({ url: '', fromShare: false })
           track('reel_import_opened', { location: 'header' })
@@ -405,6 +441,21 @@ export default function App() {
 
       {showHelp && <HowItWorks onClose={() => setShowHelp(false)} />}
 
+      {showPantry && (
+        <Pantry
+          pantry={pantry}
+          recipes={allRecipes}
+          onToggleItem={togglePantryItem}
+          onToggleCategory={togglePantryCategory}
+          onClear={() => setPantry(new Set())}
+          onOpenRecipe={(r) => {
+            setShowPantry(false)
+            openRecipe(r)
+          }}
+          onClose={() => setShowPantry(false)}
+        />
+      )}
+
       {importState && (
         <ImportRecipe
           initialUrl={importState.url}
@@ -424,7 +475,16 @@ export default function App() {
   )
 }
 
-function Header({ query, setQuery, count, listCount, onOpenList, onOpenHelp, onOpenImport }) {
+function Header({
+  query,
+  setQuery,
+  count,
+  listCount,
+  onOpenList,
+  onOpenHelp,
+  onOpenPantry,
+  onOpenImport,
+}) {
   return (
     <header className="header">
       <div className="container header-inner">
@@ -448,6 +508,15 @@ function Header({ query, setQuery, count, listCount, onOpenList, onOpenHelp, onO
               aria-label="Search recipes"
             />
           </div>
+          <button
+            className="import-btn"
+            onClick={onOpenPantry}
+            aria-label="My Pantry — find recipes from what you have"
+            title="My Pantry — find recipes from what you have"
+          >
+            🥫
+            <span className="import-btn-text">Pantry</span>
+          </button>
           <button
             className="import-btn"
             onClick={onOpenImport}
