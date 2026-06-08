@@ -10,9 +10,9 @@ export const AFFILIATE_ENABLED = true
 export const AMAZON_TAG = 'foodiee03-21'
 
 // Base amazon.in product pages (without the tag — it's appended automatically).
-// The two hero appliances point at specific products; the four "expansion"
-// appliances use category search URLs for now — swap in a /dp/<ASIN> product
-// page once you've picked the exact unit you want to recommend.
+// Each appliance points at a specific, popular, highly-rated amazon.in product.
+// Tip: prices/availability drift over time — sanity-check the live links now and
+// then, and swap the ASIN if a unit goes out of stock.
 const PRODUCTS = {
   airfryer: {
     // Philips Airfryer 4.1L RapidAir, dial control (HD9200/90)
@@ -25,20 +25,24 @@ const PRODUCTS = {
     url: 'https://www.amazon.in/dp/B0DD4DJ852',
   },
   mixer: {
-    name: 'Mixer-Grinder',
-    url: 'https://www.amazon.in/s?k=mixer+grinder',
+    // Philips HL7756/00 750W, 3 stainless jars — 33k+ ratings, category bestseller
+    name: 'Philips HL7756 Mixer-Grinder',
+    url: 'https://www.amazon.in/dp/B01GZSQJPA',
   },
   oven: {
-    name: 'OTG / Oven',
-    url: 'https://www.amazon.in/s?k=otg+oven+toaster+grill',
+    // Bajaj Majesty 1603 16L OTG — ~14k ratings, the default home OTG
+    name: 'Bajaj Majesty 1603 OTG',
+    url: 'https://www.amazon.in/dp/B009P2KQXK',
   },
   cooktop: {
-    name: 'Induction Cooktop',
-    url: 'https://www.amazon.in/s?k=induction+cooktop',
+    // Prestige PIC 6.1 V3 2200W induction — 11k+ ratings
+    name: 'Prestige PIC 6.1 Induction Cooktop',
+    url: 'https://www.amazon.in/dp/B07L12RZXL',
   },
   pressurecooker: {
-    name: 'Pressure Cooker',
-    url: 'https://www.amazon.in/s?k=pressure+cooker',
+    // Prestige 3L Deluxe Alpha Svachh stainless, induction-compatible, ISI
+    name: 'Prestige Svachh Pressure Cooker',
+    url: 'https://www.amazon.in/dp/B0843YL5RH',
   },
 }
 
