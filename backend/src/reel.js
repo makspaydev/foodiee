@@ -172,7 +172,7 @@ export async function recipeFromCaption(caption, sourceUrl) {
     '- In "equipment", list any OTHER appliances from that same set also needed (e.g. a mixer-grinder to make a paste). Omit the primary one; leave empty if none.\n' +
     '- Write clean ingredient lines as "quantity + item" (e.g. "250 g paneer, cubed") suitable for grocery shopping.\n' +
     CANON_INSTRUCTION +
-    '- Write clear numbered method steps.\n' +
+    '- Write a CONCISE method of about 5 numbered steps (4-6 max) — combine related actions into one step, like a tight recipe card. Do not over-split.\n' +
     '- Pick a single fitting food emoji.\n' +
     '- If the caption is NOT a cooking recipe, set isRecipe to false and leave the other fields minimal.\n\n' +
     'CAPTION:\n' +

@@ -113,6 +113,7 @@ export async function recipeFromImages(images, idSeed = 'shot') {
     '- If it is not food at all, set isRecipe=false.\n' +
     '- Pick the PRIMARY appliance the dish is cooked on, from exactly: airfryer, steamer, mixer, oven, cooktop (stovetop/induction/kadai/tawa/pan), pressurecooker. In "equipment" list any OTHER appliances from that set also needed (omit the primary).\n' +
     '- Write ingredient lines as "quantity + item" for grocery shopping; pick one food emoji.\n' +
+    '- Write a CONCISE method of about 5 numbered steps (4-6 max) — combine related actions into one step, like a tight recipe card. Do not over-split.\n' +
     CANON_INSTRUCTION
   const parts = [{ text: prompt }]
   for (const img of images) {
@@ -156,7 +157,7 @@ export async function recipeFromDish(dish, idSeed = dish) {
     'You are a culinary assistant for Foodiee, a recipe app.\n' +
     `Generate a single, standard, well-known recipe for "${dish}".\n` +
     '- Provide a realistic ingredient list as "quantity + item" lines suitable for grocery shopping.\n' +
-    '- Provide clear numbered steps.\n' +
+    '- Write a CONCISE method of about 5 numbered steps (4-6 max) — combine related actions into one step, like a tight recipe card. Do not over-split.\n' +
     '- Pick the PRIMARY appliance from exactly: airfryer, steamer, mixer, oven, cooktop (stovetop/induction/kadai/tawa/pan), pressurecooker. In "equipment" list any OTHER appliances from that set also needed (omit the primary).\n' +
     '- Pick one fitting food emoji. Set isRecipe=true and hasIngredients=true.\n' +
     CANON_INSTRUCTION
