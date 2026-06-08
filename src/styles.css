@@ -1807,6 +1807,55 @@ body {
   text-transform: capitalize;
 }
 
+/* ---------------- Confirm dialog ---------------- */
+.confirm-overlay {
+  z-index: 60;
+  align-items: center;
+}
+
+.confirm-dialog {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  animation: pop 0.18s ease;
+}
+
+.confirm-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.confirm-message {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.confirm-actions .btn {
+  margin-top: 0;
+}
+
+.btn-danger {
+  background: #c0392b;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: #a93226;
+}
+
 /* ---------------- My Pantry ---------------- */
 .pantry-modal {
   max-width: 560px;

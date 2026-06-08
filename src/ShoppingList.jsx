@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ORDERING_ENABLED } from './backend.js'
 import InstamartOrder from './InstamartOrder.jsx'
+import ConfirmDialog from './ConfirmDialog.jsx'
 
 export default function ShoppingList({
   items,
@@ -13,6 +14,7 @@ export default function ShoppingList({
   onClose,
 }) {
   const [copied, setCopied] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -29,15 +31,7 @@ export default function ShoppingList({
   // never appears because of stale keys left over from removed recipes.
   const checkedCount = items.length - remaining.length
 
-  const clearList = () => {
-    if (
-      window.confirm(
-        'Clear your whole shopping list? This removes every recipe from the list.',
-      )
-    ) {
-      onClearList()
-    }
-  }
+  const clearList = () => setConfirmClear(true)
 
   const copyList = async () => {
     // Copy the still-needed items as a plain bullet list.
@@ -149,6 +143,21 @@ export default function ShoppingList({
           </>
         )}
       </div>
+
+      {confirmClear && (
+        <ConfirmDialog
+          title="Clear shopping list?"
+          message="This removes every recipe from your shopping list. You can't undo this."
+          confirmLabel="🗑 Clear list"
+          cancelLabel="Keep it"
+          danger
+          onConfirm={() => {
+            onClearList()
+            setConfirmClear(false)
+          }}
+          onCancel={() => setConfirmClear(false)}
+        />
+      )}
     </div>
   )
 }

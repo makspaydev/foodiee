@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, connectUrl } from './backend.js'
 import { track } from './analytics.js'
+import ConfirmDialog from './ConfirmDialog.jsx'
 
 // Real Instamart ordering panel (shown only when the backend is configured).
 // Connect → pick address → build cart from the list → review → confirm (COD).
@@ -13,6 +14,7 @@ export default function InstamartOrder({ items }) {
   const [busy, setBusy] = useState('')
   const [placed, setPlaced] = useState(null)
   const [error, setError] = useState('')
+  const [confirmOrder, setConfirmOrder] = useState(false)
 
   useEffect(() => {
     api('/api/status')
@@ -51,7 +53,7 @@ export default function InstamartOrder({ items }) {
   }
 
   const placeOrder = async () => {
-    if (!window.confirm('Place this Cash-on-Delivery order on Swiggy Instamart? Orders cannot be cancelled.')) return
+    setConfirmOrder(false)
     setError('')
     setBusy('order')
     try {
@@ -127,7 +129,11 @@ export default function InstamartOrder({ items }) {
               {skipped.length > 0 && (
                 <p className="im-note">Skipped (likely pantry/equipment): {skipped.join(', ')}</p>
               )}
-              <button className="btn btn-instamart" onClick={placeOrder} disabled={busy === 'order'}>
+              <button
+                className="btn btn-instamart"
+                onClick={() => setConfirmOrder(true)}
+                disabled={busy === 'order'}
+              >
                 {busy === 'order' ? 'Placing…' : '✅ Place order (COD)'}
               </button>
             </div>
@@ -139,6 +145,19 @@ export default function InstamartOrder({ items }) {
       <button className="link-btn im-disconnect" onClick={disconnect}>
         Disconnect Swiggy
       </button>
+
+      {confirmOrder && (
+        <ConfirmDialog
+          title="Place this order?"
+          message={`This places a Cash-on-Delivery order on Swiggy Instamart${
+            total ? ` for ${total}` : ''
+          }. Orders can't be cancelled from Foodiee.`}
+          confirmLabel="✅ Place order"
+          cancelLabel="Not yet"
+          onConfirm={placeOrder}
+          onCancel={() => setConfirmOrder(false)}
+        />
+      )}
     </div>
   )
 }
