@@ -206,7 +206,7 @@ export default function ImportRecipe({ initialUrl = '', fromShare = false, onImp
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="Import a recipe from a reel"
+        aria-label="Import a recipe"
       >
         <button className="modal-close" onClick={onClose} aria-label="Close">
           ✕
@@ -255,9 +255,10 @@ export default function ImportRecipe({ initialUrl = '', fromShare = false, onImp
         ) : (
           <div className="import-body">
             <span className="import-emoji">🎬→🍳</span>
-            <h2 className="import-title">Import a recipe from a reel</h2>
+            <h2 className="import-title">Import a recipe</h2>
             <p className="import-sub">
-              Found a tasty recipe reel? Bring it into Foodiee — and get a one-tap Instamart list.
+              Got it from a reel, a video, or a screenshot? Bring it into Foodiee — and get a
+              one-tap Instamart shopping list.
             </p>
 
             <div className="import-tabs" role="tablist">
