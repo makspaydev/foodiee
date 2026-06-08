@@ -19,3 +19,12 @@ export async function api(path, opts = {}) {
   }
   return res.json()
 }
+
+// Turn an Instagram reel link into a Foodiee recipe (backend + Gemini).
+// Doesn't need a Swiggy connection — only that the backend is configured.
+// If `caption` is supplied, the backend skips scraping and uses it directly
+// (the robust path when Instagram serves a login wall to server fetches).
+export async function importReel(url, caption) {
+  const body = caption ? { url, caption } : { url }
+  return api('/api/import-reel', { method: 'POST', body: JSON.stringify(body) })
+}

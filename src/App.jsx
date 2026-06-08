@@ -3,6 +3,7 @@ import { recipes, MEALS, APPLIANCES, ALL_TAGS } from './recipes.js'
 import RecipeModal from './RecipeModal.jsx'
 import ShoppingList from './ShoppingList.jsx'
 import HowItWorks from './HowItWorks.jsx'
+import ImportRecipe, { extractInstagramUrl } from './ImportRecipe.jsx'
 import { IMAGES } from './imageManifest.js'
 import { AFFILIATE_ENABLED, buyUrl, productName, DISCLOSURE } from './affiliate.js'
 import { track } from './analytics.js'
@@ -13,6 +14,7 @@ export const imageSrc = (file) => `${import.meta.env.BASE_URL}images/${file}`
 const FAV_KEY = 'foodiee:favorites'
 const LIST_KEY = 'foodiee:list'
 const CHECKED_KEY = 'foodiee:checked'
+const IMPORTED_KEY = 'foodiee:imported'
 
 // Pre-filled email for the "Suggest a recipe" links.
 const SUGGEST_MAILTO =
@@ -40,6 +42,7 @@ export default function App() {
   const [plan, setPlan] = useState(null) // { breakfast, lunch, dinner }
   const [showList, setShowList] = useState(false) // shopping list open?
   const [showHelp, setShowHelp] = useState(false) // "how it works" open?
+  const [importState, setImportState] = useState(null) // { url, fromShare } | null
 
   // Favorites, persisted to localStorage.
   const [favorites, setFavorites] = useState(() => {
@@ -68,6 +71,19 @@ export default function App() {
     }
   })
 
+  // Recipes imported from Instagram reels, persisted to localStorage so they
+  // survive reloads and remain shareable/orderable like built-in recipes.
+  const [importedRecipes, setImportedRecipes] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(IMPORTED_KEY) || '[]')
+    } catch {
+      return []
+    }
+  })
+
+  // Built-in catalog + anything the user imported (imported first so it's easy to find).
+  const allRecipes = useMemo(() => [...importedRecipes, ...recipes], [importedRecipes])
+
   useEffect(() => {
     localStorage.setItem(FAV_KEY, JSON.stringify([...favorites]))
   }, [favorites])
@@ -80,13 +96,38 @@ export default function App() {
     localStorage.setItem(CHECKED_KEY, JSON.stringify([...checked]))
   }, [checked])
 
+  useEffect(() => {
+    localStorage.setItem(IMPORTED_KEY, JSON.stringify(importedRecipes))
+  }, [importedRecipes])
+
   // Open a recipe from a shared link (?recipe=<id>) on first load.
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get('recipe')
     if (id) {
-      const r = recipes.find((x) => x.id === id)
+      const r = allRecipes.find((x) => x.id === id)
       if (r) setSelected(r)
     }
+    // allRecipes is read once on mount; imported recipes are already hydrated
+    // from localStorage by then, so a ?recipe=reel-… deep link resolves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Handle a reel shared into Foodiee via the PWA Web Share Target (Android).
+  // The manifest maps the OS share fields onto ?sharetitle/?sharetext/?shareurl,
+  // so on first load we pull any Instagram link out, open the import screen, and
+  // scrub the params so a refresh doesn't re-trigger it.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    const blob = [p.get('shareurl'), p.get('sharetext'), p.get('sharetitle')]
+      .filter(Boolean)
+      .join(' ')
+    if (!blob) return
+    const url = extractInstagramUrl(blob)
+    setImportState({ url, fromShare: true })
+    track('reel_share_received', { had_url: !!url })
+    const clean = new URL(window.location.href)
+    ;['sharetitle', 'sharetext', 'shareurl'].forEach((k) => clean.searchParams.delete(k))
+    window.history.replaceState({}, '', clean)
   }, [])
 
   // Keep the URL in sync with the open recipe so it's always shareable.
@@ -128,7 +169,7 @@ export default function App() {
   // de-duplicated list.
   const shoppingItems = useMemo(() => {
     const map = new Map()
-    for (const r of recipes) {
+    for (const r of allRecipes) {
       if (!onList.has(r.id)) continue
       for (const ing of r.ingredients) {
         const key = ing.trim().toLowerCase()
@@ -143,7 +184,7 @@ export default function App() {
     return [...map.values()]
       .map((i) => ({ ...i, sources: [...i.sources] }))
       .sort((a, b) => a.text.localeCompare(b.text))
-  }, [onList])
+  }, [onList, allRecipes])
 
   const toggleFavorite = (id) =>
     setFavorites((prev) => {
@@ -154,7 +195,7 @@ export default function App() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return recipes.filter((r) => {
+    return allRecipes.filter((r) => {
       if (favsOnly && !favorites.has(r.id)) return false
       if (meal !== 'all' && !r.meals.includes(meal)) return false
       if (appliance !== 'all' && r.appliance !== appliance) return false
@@ -173,7 +214,7 @@ export default function App() {
       }
       return true
     })
-  }, [meal, appliance, activeTags, query, favsOnly, favorites])
+  }, [meal, appliance, activeTags, query, favsOnly, favorites, allRecipes])
 
   const toggleTag = (tag) =>
     setActiveTags((prev) =>
@@ -192,8 +233,8 @@ export default function App() {
   // relevant if the user is browsing just one device.
   const makePlan = () => {
     const pool = appliance === 'all'
-      ? recipes
-      : recipes.filter((r) => r.appliance === appliance)
+      ? allRecipes
+      : allRecipes.filter((r) => r.appliance === appliance)
     setPlan({
       breakfast: pickRandom(pool, 'breakfast'),
       lunch: pickRandom(pool, 'lunch'),
@@ -214,6 +255,10 @@ export default function App() {
         listCount={onList.size}
         onOpenList={() => setShowList(true)}
         onOpenHelp={() => setShowHelp(true)}
+        onOpenImport={() => {
+          setImportState({ url: '', fromShare: false })
+          track('reel_import_opened', { location: 'header' })
+        }}
       />
 
       <main className="container">
@@ -330,11 +375,26 @@ export default function App() {
       )}
 
       {showHelp && <HowItWorks onClose={() => setShowHelp(false)} />}
+
+      {importState && (
+        <ImportRecipe
+          initialUrl={importState.url}
+          fromShare={importState.fromShare}
+          onImported={(recipe) => {
+            // Register (or refresh) the imported recipe, then open it for review.
+            setImportedRecipes((prev) => [recipe, ...prev.filter((r) => r.id !== recipe.id)])
+            setImportState(null)
+            setSelected(recipe)
+            track('reel_recipe_created', { recipe_id: recipe.id, appliance: recipe.appliance })
+          }}
+          onClose={() => setImportState(null)}
+        />
+      )}
     </div>
   )
 }
 
-function Header({ query, setQuery, count, listCount, onOpenList, onOpenHelp }) {
+function Header({ query, setQuery, count, listCount, onOpenList, onOpenHelp, onOpenImport }) {
   return (
     <header className="header">
       <div className="container header-inner">
@@ -358,6 +418,15 @@ function Header({ query, setQuery, count, listCount, onOpenList, onOpenHelp }) {
               aria-label="Search recipes"
             />
           </div>
+          <button
+            className="import-btn"
+            onClick={onOpenImport}
+            aria-label="Import a recipe from an Instagram reel"
+            title="Import a recipe from an Instagram reel"
+          >
+            🎬
+            <span className="import-btn-text">Import reel</span>
+          </button>
           <button
             className="help-btn"
             onClick={onOpenHelp}

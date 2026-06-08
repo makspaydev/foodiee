@@ -8,6 +8,7 @@ import crypto from 'node:crypto'
 import { makePkce, randomState, authorizeUrl, exchangeCode } from './oauth.js'
 import { tokenStore, pendingAuth } from './store.js'
 import { instamart } from './mcp.js'
+import { isInstagramUrl, fetchInstagramCaption, recipeFromCaption } from './reel.js'
 
 const {
   PORT = 8787,
@@ -82,6 +83,31 @@ app.post('/auth/swiggy/disconnect', (req, res) => {
 })
 
 app.get('/api/status', (req, res) => res.json({ connected: tokenStore.isConnected(uid(req, res)) }))
+
+// ---- Reel → recipe (no Swiggy auth required; independent of ordering) ----
+// Pulls the public caption from an Instagram reel and turns it into a Foodiee
+// recipe via Gemini. The user can then add it to their list and order as usual.
+app.post('/api/import-reel', wrap(async (req, res) => {
+  const { url, caption } = req.body || {}
+  if (!isInstagramUrl(url)) return res.status(400).json({ error: 'invalid_instagram_url' })
+  let text = caption
+  let image = ''
+  if (!text) {
+    try {
+      const got = await fetchInstagramCaption(url)
+      text = got.caption
+      image = got.image
+    } catch {
+      return res.status(422).json({ error: 'caption_unavailable' })
+    }
+  }
+  if (!text || text.trim().length < 10) return res.status(422).json({ error: 'caption_unavailable' })
+  const recipe = await recipeFromCaption(text, url)
+  if (!recipe.isRecipe || !recipe.ingredients.length) {
+    return res.status(422).json({ error: 'not_a_recipe' })
+  }
+  res.json({ recipe, source: { url, image } })
+}))
 
 // ---- Instamart proxy (per-user, via MCP) ----
 app.get('/api/addresses', wrap(async (req, res) => {

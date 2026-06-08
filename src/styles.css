@@ -1496,3 +1496,160 @@ body {
     display: none;
   }
 }
+
+/* ---------------- Import from reel ---------------- */
+.import-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.import-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.import-modal {
+  max-width: 480px;
+}
+
+.import-body {
+  padding: 36px 28px 28px;
+  text-align: center;
+}
+
+.import-emoji {
+  display: inline-block;
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.import-title {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.import-sub {
+  margin: 0 auto 18px;
+  max-width: 360px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.import-shared {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.import-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.import-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.import-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.import-caption {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.5;
+}
+
+.import-form .btn {
+  margin-top: 0;
+  width: 100%;
+}
+
+.import-error {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #c0392b;
+  text-align: left;
+}
+
+.import-help {
+  margin-top: 18px;
+  text-align: left;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.import-help summary {
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  list-style: none;
+}
+
+.import-help summary::-webkit-details-marker {
+  display: none;
+}
+
+.import-help-body {
+  margin-top: 10px;
+}
+
+.import-help-body p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.import-reel-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.import-reel-link:hover {
+  text-decoration: underline;
+}
+
+.import-done .btn {
+  display: inline-block;
+}
+
+@media (max-width: 480px) {
+  .import-btn-text {
+    display: none;
+  }
+}
