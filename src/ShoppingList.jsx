@@ -7,6 +7,7 @@ export default function ShoppingList({
   listCount,
   checked,
   onToggle,
+  onCheckAll,
   onClearChecks,
   onClearList,
   onClose,
@@ -115,9 +116,22 @@ export default function ShoppingList({
                   <span className="badge-soon">Coming soon</span>
                 </span>
               )}
+              {remaining.length > 0 && (
+                <button
+                  className="link-btn"
+                  onClick={onCheckAll}
+                  title="Tick off every item (mark all as already have)"
+                >
+                  Select all
+                </button>
+              )}
               {checkedCount > 0 && (
-                <button className="link-btn" onClick={onClearChecks}>
-                  Uncheck all
+                <button
+                  className="link-btn"
+                  onClick={onClearChecks}
+                  title="Untick every item (buy all)"
+                >
+                  Deselect all
                 </button>
               )}
               <button className="link-btn link-danger" onClick={clearList}>

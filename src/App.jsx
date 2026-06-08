@@ -393,6 +393,7 @@ export default function App() {
           listCount={onList.size}
           checked={checked}
           onToggle={toggleChecked}
+          onCheckAll={() => setChecked(new Set(shoppingItems.map((i) => i.key)))}
           onClearChecks={() => setChecked(new Set())}
           onClearList={() => {
             setOnList(new Set())
