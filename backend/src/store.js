@@ -26,23 +26,43 @@ function decrypt(blob) {
 }
 
 // uid -> { token: <encrypted>, expiresAt, scope }
+// Persisted to a gitignored file so a server restart doesn't drop your session
+// during local development. (In prod this is a real encrypted DB.)
+import fs from 'node:fs'
+const FILE = new URL('../.tokens.json', import.meta.url)
 const db = new Map()
+try {
+  db.clear()
+  for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(FILE, 'utf8')))) db.set(k, v)
+} catch {
+  /* no file yet */
+}
+function persist() {
+  try {
+    fs.writeFileSync(FILE, JSON.stringify(Object.fromEntries(db)))
+  } catch {
+    /* best-effort */
+  }
+}
 
 export const tokenStore = {
   save(uid, { accessToken, expiresAt, scope }) {
     db.set(uid, { token: encrypt(accessToken), expiresAt, scope })
+    persist()
   },
   load(uid) {
     const row = db.get(uid)
     if (!row) return null
     if (row.expiresAt && row.expiresAt < Date.now()) {
       db.delete(uid) // expired — Swiggy v1 has no refresh, user must reconnect
+      persist()
       return null
     }
     return { accessToken: decrypt(row.token), expiresAt: row.expiresAt, scope: row.scope }
   },
   remove(uid) {
     db.delete(uid)
+    persist()
   },
   isConnected(uid) {
     return !!this.load(uid)

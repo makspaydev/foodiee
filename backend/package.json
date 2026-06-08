@@ -5,9 +5,9 @@
   "type": "module",
   "description": "Foodiee ordering backend — OAuth 2.1 + PKCE against Swiggy MCP, calls the Instamart MCP on the user's behalf with explicit confirmation.",
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
-    "register": "node src/register-client.js"
+    "dev": "node --env-file=.env --watch src/server.js",
+    "start": "node --env-file=.env src/server.js",
+    "register": "node --env-file=.env src/register-client.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

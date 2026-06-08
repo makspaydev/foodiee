@@ -21,15 +21,19 @@ async function withSession(accessToken, fn) {
   }
 }
 
-// Call a tool and parse its JSON result (Instamart tools return JSON as text content).
+// Call a tool and return the cleanest result available:
+// prefer MCP structuredContent, else JSON-parse the text content, else raw text.
 export async function callTool(accessToken, name, args = {}) {
   return withSession(accessToken, async (client) => {
     const res = await client.callTool({ name, arguments: args })
+    if (res.structuredContent && Object.keys(res.structuredContent).length) {
+      return res.structuredContent
+    }
     const text = (res.content || []).filter((p) => p.type === 'text').map((p) => p.text).join('')
     try {
       return JSON.parse(text)
     } catch {
-      return text || res
+      return { text }
     }
   })
 }

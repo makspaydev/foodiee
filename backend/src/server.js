@@ -109,6 +109,54 @@ app.post('/api/cart/clear', wrap(async (req, res) => {
   if (token) res.json(await instamart.clearCart(token))
 }))
 
+// Turn an ingredient line into a search query (drop quantities/units/notes).
+function toQuery(text) {
+  return String(text)
+    .split(',')[0]
+    .replace(/\([^)]*\)/g, '')
+    .replace(/^[\d.\/¼½¾\s-]+/, '')
+    .replace(/\b(g|kg|ml|l|tbsp|tsp|cups?|cloves?|large|small|thick|slices?|pieces?|x|each|to serve|of)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function firstInStock(searchResult) {
+  for (const p of searchResult?.products || []) {
+    const v = (p.variations || []).find((x) => x.isInStockAndAvailable)
+    if (v) return { spinId: v.spinId, name: p.displayName, qty: v.quantityDescription, price: v.price?.offerPrice }
+  }
+  return null
+}
+
+// Build a cart from a list of ingredient strings: search each, add the top match.
+app.post('/api/build-cart', wrap(async (req, res) => {
+  const token = requireToken(req, res)
+  if (!token) return
+  const { addressId, items = [] } = req.body
+  if (!addressId) return res.status(400).json({ error: 'addressId required' })
+  const picked = []
+  const skipped = []
+  for (const text of items.slice(0, 15)) {
+    const query = toQuery(text)
+    if (query.length < 2) { skipped.push(text); continue }
+    try {
+      const match = firstInStock(await instamart.searchProducts(token, { addressId, query }))
+      if (match) picked.push({ ...match, from: text })
+      else skipped.push(text)
+    } catch {
+      skipped.push(text)
+    }
+  }
+  if (picked.length) {
+    await instamart.updateCart(token, {
+      selectedAddressId: addressId,
+      items: picked.map((p) => ({ spinId: p.spinId, quantity: 1 })),
+    })
+  }
+  const cart = await instamart.getCart(token)
+  res.json({ picked, skipped, cart })
+}))
+
 // Order placement — requires explicit confirmation. COD only.
 app.post('/api/order', wrap(async (req, res) => {
   const token = requireToken(req, res)

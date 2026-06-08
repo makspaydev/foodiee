@@ -1173,6 +1173,102 @@ body {
   color: var(--ink-soft);
 }
 
+/* ---------------- Instamart order panel ---------------- */
+.im-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.im-panel .btn {
+  margin-top: 0;
+}
+
+.im-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.im-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.im-select {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.im-cart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.im-cart-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.im-cart-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.im-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  padding-top: 4px;
+}
+
+.im-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.im-success {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+.im-error {
+  margin: 0;
+  font-size: 13px;
+  color: #c0392b;
+}
+
+.im-disconnect {
+  align-self: flex-start;
+  font-size: 12px;
+}
+
 .list-hint strong {
   color: var(--ink);
 }

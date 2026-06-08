@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { ORDERING_ENABLED } from './backend.js'
+import InstamartOrder from './InstamartOrder.jsx'
 
 export default function ShoppingList({
   items,
@@ -107,10 +109,12 @@ export default function ShoppingList({
               <button className="btn" onClick={copyList}>
                 {copied ? '✓ Copied!' : '📋 Copy list'}
               </button>
-              <span className="instamart-soon" title="Order directly from Instamart — coming soon">
-                🛒 Order via Instamart
-                <span className="badge-soon">Coming soon</span>
-              </span>
+              {!ORDERING_ENABLED && (
+                <span className="instamart-soon" title="Order directly from Instamart — coming soon">
+                  🛒 Order via Instamart
+                  <span className="badge-soon">Coming soon</span>
+                </span>
+              )}
               {checkedCount > 0 && (
                 <button className="link-btn" onClick={onClearChecks}>
                   Uncheck all
@@ -120,10 +124,14 @@ export default function ShoppingList({
                 🗑 Clear list
               </button>
             </div>
-            <p className="list-hint">
-              📋 <strong>Copy list</strong> to shop your usual way. One-tap ordering straight
-              from <strong>Swiggy Instamart</strong> is on the way — coming soon.
-            </p>
+            {ORDERING_ENABLED ? (
+              <InstamartOrder items={remaining.map((i) => i.text)} />
+            ) : (
+              <p className="list-hint">
+                📋 <strong>Copy list</strong> to shop your usual way. One-tap ordering straight
+                from <strong>Swiggy Instamart</strong> is on the way — coming soon.
+              </p>
+            )}
           </>
         )}
       </div>
