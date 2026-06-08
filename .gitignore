@@ -5,3 +5,6 @@ dist
 .env
 .env.*
 backend/.tokens.json
+
+# ingredient tagging cache (regenerable)
+scripts/.ingredient-cache.json
