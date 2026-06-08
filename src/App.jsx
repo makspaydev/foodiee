@@ -4,6 +4,8 @@ import RecipeModal from './RecipeModal.jsx'
 import ShoppingList from './ShoppingList.jsx'
 import HowItWorks from './HowItWorks.jsx'
 import ImportRecipe, { extractInstagramUrl } from './ImportRecipe.jsx'
+import { ORDERING_ENABLED, recipeImage } from './backend.js'
+import { compressDataUrl } from './imageUtil.js'
 import { IMAGES } from './imageManifest.js'
 import { AFFILIATE_ENABLED, buyUrl, productName, DISCLOSURE } from './affiliate.js'
 import { track } from './analytics.js'
@@ -84,6 +86,13 @@ export default function App() {
   // Built-in catalog + anything the user imported (imported first so it's easy to find).
   const allRecipes = useMemo(() => [...importedRecipes, ...recipes], [importedRecipes])
 
+  // Appliance chips only show for appliances that actually have recipes, so the
+  // four "expansion" appliances appear only once an imported recipe uses them.
+  const availableAppliances = useMemo(
+    () => new Set(allRecipes.map((r) => r.appliance)),
+    [allRecipes],
+  )
+
   useEffect(() => {
     localStorage.setItem(FAV_KEY, JSON.stringify([...favorites]))
   }, [favorites])
@@ -97,8 +106,26 @@ export default function App() {
   }, [checked])
 
   useEffect(() => {
-    localStorage.setItem(IMPORTED_KEY, JSON.stringify(importedRecipes))
+    try {
+      localStorage.setItem(IMPORTED_KEY, JSON.stringify(importedRecipes))
+    } catch {
+      /* storage full (e.g. many recipe images) — keep them in memory for this session */
+    }
   }, [importedRecipes])
+
+  // Generate an AI food photo for an imported recipe in the background, then
+  // slot it into the card + modal (progressive — the recipe is usable instantly).
+  const attachRecipeImage = async (recipe) => {
+    if (!ORDERING_ENABLED || recipe.image) return
+    try {
+      const { data, mimeType } = await recipeImage(recipe)
+      const image = await compressDataUrl(`data:${mimeType};base64,${data}`)
+      setImportedRecipes((prev) => prev.map((r) => (r.id === recipe.id ? { ...r, image } : r)))
+      setSelected((sel) => (sel && sel.id === recipe.id ? { ...sel, image } : sel))
+    } catch {
+      /* leave the emoji hero in place */
+    }
+  }
 
   // Open a recipe from a shared link (?recipe=<id>) on first load.
   useEffect(() => {
@@ -269,6 +296,7 @@ export default function App() {
           setMeal={setMeal}
           appliance={appliance}
           setAppliance={setAppliance}
+          availableAppliances={availableAppliances}
           activeTags={activeTags}
           toggleTag={toggleTag}
           favsOnly={favsOnly}
@@ -386,6 +414,7 @@ export default function App() {
             setImportState(null)
             setSelected(recipe)
             track('reel_recipe_created', { recipe_id: recipe.id, appliance: recipe.appliance })
+            attachRecipeImage(recipe) // generate a hero photo in the background
           }}
           onClose={() => setImportState(null)}
         />
@@ -519,6 +548,7 @@ function FilterBar({
   setMeal,
   appliance,
   setAppliance,
+  availableAppliances,
   activeTags,
   toggleTag,
   favsOnly,
@@ -550,15 +580,17 @@ function FilterBar({
           >
             All
           </Chip>
-          {Object.entries(APPLIANCES).map(([key, a]) => (
-            <Chip
-              key={key}
-              active={appliance === key}
-              onClick={() => setAppliance(key)}
-            >
-              {a.emoji} {a.label}
-            </Chip>
-          ))}
+          {Object.entries(APPLIANCES)
+            .filter(([key]) => !availableAppliances || availableAppliances.has(key))
+            .map(([key, a]) => (
+              <Chip
+                key={key}
+                active={appliance === key}
+                onClick={() => setAppliance(key)}
+              >
+                {a.emoji} {a.label}
+              </Chip>
+            ))}
           <Chip active={favsOnly} onClick={() => setFavsOnly((v) => !v)}>
             ❤️ Favorites{favCount ? ` (${favCount})` : ''}
           </Chip>
@@ -602,10 +634,10 @@ function RecipeCard({ recipe, onOpen, isFav, onToggleFav, isOnList, onToggleList
     <article className="card-wrap">
       <button className="card" onClick={onOpen} type="button">
         <div className="card-hero" style={{ background: recipe.color }}>
-          {IMAGES[recipe.id] && (
+          {(recipe.image || IMAGES[recipe.id]) && (
             <img
               className="card-photo"
-              src={imageSrc(IMAGES[recipe.id])}
+              src={recipe.image || imageSrc(IMAGES[recipe.id])}
               alt={recipe.title}
               loading="lazy"
               onError={(e) => {

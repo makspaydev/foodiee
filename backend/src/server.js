@@ -9,6 +9,7 @@ import { makePkce, randomState, authorizeUrl, exchangeCode } from './oauth.js'
 import { tokenStore, pendingAuth } from './store.js'
 import { instamart } from './mcp.js'
 import { isInstagramUrl, fetchInstagramCaption, recipeFromCaption } from './reel.js'
+import { recipeFromImages, recipeFromDish, generateRecipeImage } from './vision.js'
 
 const {
   PORT = 8787,
@@ -18,7 +19,8 @@ const {
 } = process.env
 
 const app = express()
-app.use(express.json())
+// Screenshots arrive as base64 JSON, so allow a generous body (a few images).
+app.use(express.json({ limit: '30mb' }))
 app.use(cookieParser())
 
 // CORS for the frontend (credentials so the uid cookie is sent).
@@ -89,7 +91,8 @@ app.get('/api/status', (req, res) => res.json({ connected: tokenStore.isConnecte
 // recipe via Gemini. The user can then add it to their list and order as usual.
 app.post('/api/import-reel', wrap(async (req, res) => {
   const { url, caption } = req.body || {}
-  if (!isInstagramUrl(url)) return res.status(400).json({ error: 'invalid_instagram_url' })
+  // A pasted caption doesn't need a valid link; a bare link does.
+  if (!caption && !isInstagramUrl(url)) return res.status(400).json({ error: 'invalid_instagram_url' })
   let text = caption
   let image = ''
   if (!text) {
@@ -102,11 +105,43 @@ app.post('/api/import-reel', wrap(async (req, res) => {
     }
   }
   if (!text || text.trim().length < 10) return res.status(422).json({ error: 'caption_unavailable' })
-  const recipe = await recipeFromCaption(text, url)
+  const recipe = await recipeFromCaption(text, url || 'pasted-caption')
   if (!recipe.isRecipe || !recipe.ingredients.length) {
     return res.status(422).json({ error: 'not_a_recipe' })
   }
   res.json({ recipe, source: { url, image } })
+}))
+
+// Screenshots → recipe (Gemini Vision). Two-tier: exact recipe if an ingredient
+// list is visible, else dish recognition (hasIngredients=false) so the client can
+// offer a standard recipe for the recognized dish.
+app.post('/api/import-screenshots', wrap(async (req, res) => {
+  const { images } = req.body || {}
+  if (!Array.isArray(images) || !images.length) return res.status(400).json({ error: 'no_images' })
+  const clean = images
+    .filter((i) => i && typeof i.data === 'string' && i.data.length > 32)
+    .slice(0, 5)
+    .map((i) => ({ data: i.data, mimeType: i.mimeType || 'image/jpeg' }))
+  if (!clean.length) return res.status(400).json({ error: 'no_images' })
+  const recipe = await recipeFromImages(clean, 'shot-' + clean[0].data.slice(0, 24))
+  if (!recipe.isRecipe) return res.status(422).json({ error: 'not_food' })
+  res.json({ recipe })
+}))
+
+// Generate a standard recipe for a recognized dish name.
+app.post('/api/recipe-from-dish', wrap(async (req, res) => {
+  const { dish } = req.body || {}
+  if (!dish || String(dish).trim().length < 2) return res.status(400).json({ error: 'no_dish' })
+  const recipe = await recipeFromDish(String(dish).trim())
+  res.json({ recipe })
+}))
+
+// Generate an AI food photo for an imported recipe (progressive enhancement).
+app.post('/api/recipe-image', wrap(async (req, res) => {
+  const { title, cuisine } = req.body || {}
+  if (!title || String(title).trim().length < 2) return res.status(400).json({ error: 'no_title' })
+  const img = await generateRecipeImage(String(title).trim(), String(cuisine || '').trim())
+  res.json(img)
 }))
 
 // ---- Instamart proxy (per-user, via MCP) ----

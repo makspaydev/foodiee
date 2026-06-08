@@ -7,9 +7,16 @@
 // Each recipe is tagged with one or more meals: 'breakfast' | 'lunch' | 'dinner'.
 // Times are total (prep + cook) in minutes. Difficulty: 'Easy' | 'Medium'.
 
+// Six curated "hero" appliances. The first two are Foodiee's brand front-door
+// (the built-in 98 recipes); the rest unlock when you import recipes from reels.
+// Each maps to an affiliate product in affiliate.js.
 export const APPLIANCES = {
   airfryer: { label: 'Air Fryer', emoji: '🌀', full: 'Philips Airfryer' },
   steamer: { label: 'Steamer / Egg Boiler', emoji: '♨️', full: 'Wipro Multi Cooker' },
+  mixer: { label: 'Mixer-Grinder', emoji: '🥤', full: 'Mixer-Grinder / Blender' },
+  oven: { label: 'OTG / Oven', emoji: '🔥', full: 'OTG / Oven' },
+  cooktop: { label: 'Cooktop', emoji: '🍳', full: 'Induction Cooktop' },
+  pressurecooker: { label: 'Pressure Cooker', emoji: '🍲', full: 'Pressure Cooker' },
 }
 
 export const MEALS = {

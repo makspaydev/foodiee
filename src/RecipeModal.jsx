@@ -80,10 +80,10 @@ export default function RecipeModal({
         </button>
 
         <div className="modal-hero" style={{ background: recipe.color }}>
-          {IMAGES[recipe.id] && (
+          {(recipe.image || IMAGES[recipe.id]) && (
             <img
               className="modal-photo"
-              src={imageSrc(IMAGES[recipe.id])}
+              src={recipe.image || imageSrc(IMAGES[recipe.id])}
               alt={recipe.title}
               onError={(e) => {
                 e.currentTarget.style.display = 'none'
@@ -122,6 +122,16 @@ export default function RecipeModal({
             <Stat label="Difficulty" value={recipe.difficulty} />
             <Stat label="Serves" value={recipe.servings} />
           </div>
+
+          {recipe.equipment?.length > 0 && (
+            <p className="modal-equipment">
+              🧰 Also uses:{' '}
+              {recipe.equipment
+                .map((k) => (APPLIANCES[k] ? `${APPLIANCES[k].emoji} ${APPLIANCES[k].label}` : null))
+                .filter(Boolean)
+                .join('  ·  ')}
+            </p>
+          )}
 
           {AFFILIATE_ENABLED && (
             <a

@@ -13,7 +13,7 @@ const PALETTE = [
 ]
 
 const MEAL_KEYS = ['breakfast', 'lunch', 'dinner', 'snack', 'dessert']
-const APPLIANCE_KEYS = ['airfryer', 'steamer']
+const APPLIANCE_KEYS = ['airfryer', 'steamer', 'mixer', 'oven', 'cooktop', 'pressurecooker']
 
 export function isInstagramUrl(url) {
   return IG_RE.test(String(url || ''))
@@ -74,6 +74,7 @@ const RECIPE_SCHEMA = {
     title: { type: 'string' },
     cuisine: { type: 'string' },
     appliance: { type: 'string', enum: APPLIANCE_KEYS },
+    equipment: { type: 'array', items: { type: 'string', enum: APPLIANCE_KEYS } },
     meals: { type: 'array', items: { type: 'string', enum: MEAL_KEYS } },
     time: { type: 'integer' },
     difficulty: { type: 'string', enum: ['Easy', 'Medium', 'Hard'] },
@@ -111,7 +112,11 @@ function normalize(parsed, sourceUrl) {
     emoji: (parsed.emoji || '🍽').trim() || '🍽',
     color,
     meals: meals.length ? meals : ['dinner'],
-    appliance: clampOne(parsed.appliance, APPLIANCE_KEYS, 'airfryer'),
+    appliance: clampOne(parsed.appliance, APPLIANCE_KEYS, 'cooktop'),
+    equipment: Array.isArray(parsed.equipment)
+      ? [...new Set(parsed.equipment.filter((e) => APPLIANCE_KEYS.includes(e)))]
+          .filter((e) => e !== clampOne(parsed.appliance, APPLIANCE_KEYS, 'cooktop'))
+      : [],
     cuisine: String(parsed.cuisine || 'Global').trim(),
     time: Number.isFinite(parsed.time) ? parsed.time : 20,
     difficulty: clampOne(parsed.difficulty, ['Easy', 'Medium', 'Hard'], 'Easy'),
@@ -128,9 +133,10 @@ function normalize(parsed, sourceUrl) {
 export async function recipeFromCaption(caption, sourceUrl) {
   if (!GEMINI_KEY) throw new Error('gemini_not_configured')
   const prompt =
-    'You are a culinary assistant for Foodiee, an app focused on AIR FRYER and STEAMER cooking.\n' +
+    'You are a culinary assistant for Foodiee, a recipe app.\n' +
     'From the Instagram caption below, extract a single structured recipe.\n' +
-    '- Adapt the cooking method to an air fryer or a steamer where reasonable, and pick the closest "appliance".\n' +
+    '- Pick the PRIMARY appliance this dish is actually cooked on, from exactly: airfryer, steamer, mixer (mixer-grinder/blender), oven (OTG/oven), cooktop (stovetop/induction/kadai/tawa/pan), pressurecooker. Do NOT force air fryer or steamer if the dish is normally made another way.\n' +
+    '- In "equipment", list any OTHER appliances from that same set also needed (e.g. a mixer-grinder to make a paste). Omit the primary one; leave empty if none.\n' +
     '- Write clean ingredient lines as "quantity + item" (e.g. "250 g paneer, cubed") suitable for grocery shopping.\n' +
     '- Write clear numbered method steps.\n' +
     '- Pick a single fitting food emoji.\n' +

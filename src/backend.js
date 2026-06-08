@@ -28,3 +28,21 @@ export async function importReel(url, caption) {
   const body = caption ? { url, caption } : { url }
   return api('/api/import-reel', { method: 'POST', body: JSON.stringify(body) })
 }
+
+// Screenshots → recipe (Gemini Vision). images: [{ data:<base64>, mimeType }].
+export async function importScreenshots(images) {
+  return api('/api/import-screenshots', { method: 'POST', body: JSON.stringify({ images }) })
+}
+
+// Generate a standard recipe for a recognized dish name.
+export async function recipeFromDish(dish) {
+  return api('/api/recipe-from-dish', { method: 'POST', body: JSON.stringify({ dish }) })
+}
+
+// Generate an AI food photo for a recipe → { data:<base64>, mimeType }.
+export async function recipeImage(recipe) {
+  return api('/api/recipe-image', {
+    method: 'POST',
+    body: JSON.stringify({ title: recipe.title, cuisine: recipe.cuisine }),
+  })
+}
