@@ -5,6 +5,7 @@ import ShoppingList from './ShoppingList.jsx'
 import HowItWorks from './HowItWorks.jsx'
 import { IMAGES } from './imageManifest.js'
 import { AFFILIATE_ENABLED, buyUrl, productName, DISCLOSURE } from './affiliate.js'
+import { track } from './analytics.js'
 
 // Path to an image file (served from public/images). Base-path safe.
 export const imageSrc = (file) => `${import.meta.env.BASE_URL}images/${file}`
@@ -72,12 +73,25 @@ export default function App() {
     localStorage.setItem(CHECKED_KEY, JSON.stringify([...checked]))
   }, [checked])
 
-  const toggleList = (id) =>
+  const toggleList = (id) => {
+    const adding = !onList.has(id)
     setOnList((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      adding ? next.add(id) : next.delete(id)
       return next
     })
+    if (adding) track('add_to_list', { recipe_id: id })
+  }
+
+  // Open a recipe and record it in analytics.
+  const openRecipe = (r) => {
+    setSelected(r)
+    track('recipe_open', {
+      recipe_id: r.id,
+      recipe_title: r.title,
+      appliance: r.appliance,
+    })
+  }
 
   const toggleChecked = (key) =>
     setChecked((prev) => {
@@ -161,6 +175,7 @@ export default function App() {
       lunch: pickRandom(pool, 'lunch'),
       dinner: pickRandom(pool, 'dinner'),
     })
+    track('plan_generated', { appliance })
   }
 
   const hasFilters =
@@ -178,7 +193,7 @@ export default function App() {
       />
 
       <main className="container">
-        <Planner plan={plan} onPlan={makePlan} onClear={() => setPlan(null)} onOpen={setSelected} />
+        <Planner plan={plan} onPlan={makePlan} onClear={() => setPlan(null)} onOpen={openRecipe} />
 
         <FilterBar
           meal={meal}
@@ -216,7 +231,7 @@ export default function App() {
                 onToggleFav={() => toggleFavorite(r.id)}
                 isOnList={onList.has(r.id)}
                 onToggleList={() => toggleList(r.id)}
-                onOpen={() => setSelected(r)}
+                onOpen={() => openRecipe(r)}
               />
             ))}
           </div>
@@ -232,6 +247,7 @@ export default function App() {
                 href={buyUrl('airfryer')}
                 target="_blank"
                 rel="sponsored nofollow noopener noreferrer"
+                onClick={() => track('affiliate_click', { appliance: 'airfryer', location: 'footer' })}
               >
                 🌀 {productName('airfryer')}
               </a>
@@ -239,6 +255,7 @@ export default function App() {
                 href={buyUrl('steamer')}
                 target="_blank"
                 rel="sponsored nofollow noopener noreferrer"
+                onClick={() => track('affiliate_click', { appliance: 'steamer', location: 'footer' })}
               >
                 ♨️ {productName('steamer')}
               </a>

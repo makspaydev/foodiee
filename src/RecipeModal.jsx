@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { MEALS, APPLIANCES } from './recipes.js'
 import { IMAGES } from './imageManifest.js'
 import { AFFILIATE_ENABLED, buyUrl, productName } from './affiliate.js'
+import { track } from './analytics.js'
 
 const imageSrc = (file) => `${import.meta.env.BASE_URL}images/${file}`
 
@@ -98,6 +99,13 @@ export default function RecipeModal({
               href={buyUrl(recipe.appliance)}
               target="_blank"
               rel="sponsored nofollow noopener noreferrer"
+              onClick={() =>
+                track('affiliate_click', {
+                  appliance: recipe.appliance,
+                  location: 'recipe',
+                  recipe_id: recipe.id,
+                })
+              }
             >
               🛒 Don't have one? Get the {productName(recipe.appliance)} on Amazon →
             </a>
