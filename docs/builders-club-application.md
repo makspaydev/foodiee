@@ -18,7 +18,7 @@
 
 **Name:** Foodiee
 **Live app:** https://foodiee.live
-**Source:** https://github.com/makspaydev/foodiee
+**Source:** https://github.com/FoodieeLive/foodiee
 
 **One-liner:** A recipe app for home cooks that turns the dishes you choose into a
 single, de-duplicated grocery list — and lets you order those groceries from Swiggy

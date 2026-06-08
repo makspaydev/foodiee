@@ -1,6 +1,6 @@
 # 🍳 Foodiee
 
-**Live:** https://foodiee.live  (also at https://makspaydev.github.io/foodiee/, which redirects here)
+**Live:** https://foodiee.live  (also at https://foodieelive.github.io/foodiee/, which redirects here)
 
 An internal recipe site for our two kitchen gadgets:
 
