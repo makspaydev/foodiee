@@ -1815,6 +1815,42 @@ body {
   color: var(--ink-soft);
 }
 
+.pantry-search-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface);
+  margin: 0 0 4px;
+  padding: 2px 0 12px;
+}
+
+.pantry-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.pantry-search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+}
+
+.pantry-search .search-icon {
+  position: static;
+  transform: none;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
 .pantry-cat {
   margin-bottom: 16px;
 }

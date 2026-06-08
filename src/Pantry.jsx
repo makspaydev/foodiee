@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { PANTRY } from './pantryData.js'
 import { matchAll } from './pantryMatch.js'
 
@@ -22,6 +22,18 @@ export default function Pantry({
       document.body.style.overflow = ''
     }
   }, [onClose])
+
+  const [query, setQuery] = useState('')
+  const q = query.trim().toLowerCase()
+
+  // Categories with their items filtered by the search query (empty cats drop out).
+  const visibleCats = useMemo(
+    () =>
+      Object.entries(PANTRY)
+        .map(([cat, items]) => [cat, q ? items.filter((i) => i.includes(q)) : items])
+        .filter(([, items]) => items.length > 0),
+    [q],
+  )
 
   const matches = useMemo(() => matchAll(recipes, pantry), [recipes, pantry])
   const cookable = matches.filter((m) => m.missingCount === 0)
@@ -49,35 +61,52 @@ export default function Pantry({
             order just the missing bits from Instamart.
           </p>
 
-          {Object.entries(PANTRY).map(([cat, items]) => {
-            const selected = items.filter((i) => pantry.has(i)).length
-            const allSelected = selected === items.length
-            return (
-              <section key={cat} className="pantry-cat">
-                <div className="pantry-cat-head">
-                  <h3>
-                    {cat} <span className="pantry-cat-count">{selected}/{items.length}</span>
-                  </h3>
-                  <button className="link-btn" onClick={() => onToggleCategory(items)}>
-                    {allSelected ? 'Clear' : 'Select all'}
-                  </button>
-                </div>
-                <div className="pantry-chips">
-                  {items.map((i) => (
-                    <button
-                      key={i}
-                      className={`pantry-chip${pantry.has(i) ? ' on' : ''}`}
-                      onClick={() => onToggleItem(i)}
-                      type="button"
-                      aria-pressed={pantry.has(i)}
-                    >
-                      {i}
+          <div className="pantry-search-bar">
+            <div className="pantry-search">
+              <span className="search-icon">🔎</span>
+              <input
+                type="search"
+                placeholder="Search ingredients…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Search pantry ingredients"
+              />
+            </div>
+          </div>
+
+          {visibleCats.length === 0 ? (
+            <p className="pantry-hint">No ingredients match “{query}”.</p>
+          ) : (
+            visibleCats.map(([cat, items]) => {
+              const selected = items.filter((i) => pantry.has(i)).length
+              const allSelected = selected === items.length
+              return (
+                <section key={cat} className="pantry-cat">
+                  <div className="pantry-cat-head">
+                    <h3>
+                      {cat} <span className="pantry-cat-count">{selected}/{items.length}</span>
+                    </h3>
+                    <button className="link-btn" onClick={() => onToggleCategory(items)}>
+                      {allSelected ? 'Clear' : 'Select all'}
                     </button>
-                  ))}
-                </div>
-              </section>
-            )
-          })}
+                  </div>
+                  <div className="pantry-chips">
+                    {items.map((i) => (
+                      <button
+                        key={i}
+                        className={`pantry-chip${pantry.has(i) ? ' on' : ''}`}
+                        onClick={() => onToggleItem(i)}
+                        type="button"
+                        aria-pressed={pantry.has(i)}
+                      >
+                        {i}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )
+            })
+          )}
         </div>
 
         <div className="pantry-foot">
