@@ -84,8 +84,40 @@ const RECIPE_SCHEMA = {
     ingredients: { type: 'array', items: { type: 'string' } },
     steps: { type: 'array', items: { type: 'string' } },
     tags: { type: 'array', items: { type: 'string' } },
+    canonLines: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          raw: { type: 'string' },
+          canon: { type: 'string' },
+          staple: { type: 'boolean' },
+        },
+        required: ['raw', 'canon', 'staple'],
+      },
+    },
   },
   required: ['isRecipe', 'title', 'appliance', 'meals', 'ingredients', 'steps'],
+}
+
+// Shared instruction so imported recipes carry pantry tags (for pantry matching).
+const CANON_INSTRUCTION =
+  '- Also output "canonLines": for EACH ingredient line, an object ' +
+  '{ raw (the exact line), canon (its main grocery item as a lowercase singular ' +
+  'common name — yogurt not curd, capsicum not bell pepper, coriander not cilantro), ' +
+  'staple (true ONLY for salt, water, cooking oil, sugar, pepper) }.\n'
+
+// Normalize Gemini canonLines into the shape pantry matching expects.
+export function normCanonLines(parsed) {
+  return Array.isArray(parsed.canonLines)
+    ? parsed.canonLines
+        .map((l) => ({
+          raw: String(l.raw || '').trim(),
+          canon: String(l.canon || '').toLowerCase().trim(),
+          staple: !!l.staple,
+        }))
+        .filter((l) => l.raw)
+    : []
 }
 
 function clampOne(value, allowed, fallback) {
@@ -125,6 +157,7 @@ function normalize(parsed, sourceUrl) {
     ingredients,
     steps,
     tags,
+    canonLines: normCanonLines(parsed),
     source: 'reel',
     sourceUrl,
   }
@@ -138,6 +171,7 @@ export async function recipeFromCaption(caption, sourceUrl) {
     '- Pick the PRIMARY appliance this dish is actually cooked on, from exactly: airfryer, steamer, mixer (mixer-grinder/blender), oven (OTG/oven), cooktop (stovetop/induction/kadai/tawa/pan), pressurecooker. Do NOT force air fryer or steamer if the dish is normally made another way.\n' +
     '- In "equipment", list any OTHER appliances from that same set also needed (e.g. a mixer-grinder to make a paste). Omit the primary one; leave empty if none.\n' +
     '- Write clean ingredient lines as "quantity + item" (e.g. "250 g paneer, cubed") suitable for grocery shopping.\n' +
+    CANON_INSTRUCTION +
     '- Write clear numbered method steps.\n' +
     '- Pick a single fitting food emoji.\n' +
     '- If the caption is NOT a cooking recipe, set isRecipe to false and leave the other fields minimal.\n\n' +

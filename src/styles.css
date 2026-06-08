@@ -1789,6 +1789,24 @@ body {
   color: var(--ink-soft);
 }
 
+.modal-pantry {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.modal-pantry strong {
+  color: var(--accent);
+}
+
+.modal-pantry-gap {
+  text-transform: capitalize;
+}
+
 /* ---------------- My Pantry ---------------- */
 .pantry-modal {
   max-width: 560px;

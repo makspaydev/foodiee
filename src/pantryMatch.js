@@ -2,16 +2,41 @@
 // each recipe is to cookable. Pure set intersection over the tags from phase 1.
 import { RECIPE_INGREDIENTS } from './pantryData.js'
 
-// Unique, non-staple canonical ingredients a recipe needs. Built-in recipes use
-// the generated tags; imported recipes can carry their own `canonTags` later.
+// Per-ingredient-line canonical tags. Built-in recipes use the generated tags;
+// imported recipes carry their own `canonLines` from the backend.
+function recipeLines(recipe) {
+  return RECIPE_INGREDIENTS[recipe.id] || recipe.canonLines || []
+}
+
+// Unique, non-staple canonical ingredients a recipe needs.
 function requiredTags(recipe) {
-  const tags = RECIPE_INGREDIENTS[recipe.id] || recipe.canonTags || []
   const seen = new Map()
-  for (const t of tags) {
+  for (const t of recipeLines(recipe)) {
     if (t.staple) continue
-    if (!seen.has(t.canon)) seen.set(t.canon, t)
+    if (t.canon && !seen.has(t.canon)) seen.set(t.canon, t)
   }
   return [...seen.values()]
+}
+
+// Shopping-list keys (lowercased raw lines) for ingredients the user already has
+// — staples, plus pantry items. These get auto-ticked so the Instamart cart is
+// only the gap. Compound lines ("1 capsicum + 1 onion", "1 tsp each: …") are left
+// unticked even if their main item matches, so we never drop a hidden ingredient.
+export function coveredLineKeys(recipe, pantry) {
+  return recipeLines(recipe)
+    .filter((l) => {
+      if (l.staple) return true
+      if (!l.canon || !pantry.has(l.canon)) return false
+      if (/[+]|:\s/.test(l.raw || '')) return false
+      return true
+    })
+    .map((l) => (l.raw || '').trim().toLowerCase())
+    .filter(Boolean)
+}
+
+// Does this recipe have pantry tags at all (built-in or imported)?
+export function hasPantryTags(recipe) {
+  return recipeLines(recipe).length > 0
 }
 
 export function matchRecipe(recipe, pantry) {

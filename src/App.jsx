@@ -5,6 +5,7 @@ import ShoppingList from './ShoppingList.jsx'
 import HowItWorks from './HowItWorks.jsx'
 import ImportRecipe, { extractInstagramUrl } from './ImportRecipe.jsx'
 import Pantry from './Pantry.jsx'
+import { coveredLineKeys } from './pantryMatch.js'
 import { ORDERING_ENABLED, recipeImage } from './backend.js'
 import { compressDataUrl } from './imageUtil.js'
 import { IMAGES } from './imageManifest.js'
@@ -204,7 +205,16 @@ export default function App() {
       adding ? next.add(id) : next.delete(id)
       return next
     })
-    if (adding) track('add_to_list', { recipe_id: id })
+    if (adding) {
+      track('add_to_list', { recipe_id: id })
+      // If the pantry is set up, auto-tick the items you already have so the
+      // shopping list (and Instamart cart) is just the gap.
+      if (pantry.size > 0) {
+        const recipe = allRecipes.find((r) => r.id === id)
+        const keys = recipe ? coveredLineKeys(recipe, pantry) : []
+        if (keys.length) setChecked((prev) => new Set([...prev, ...keys]))
+      }
+    }
   }
 
   // Open a recipe and record it in analytics.
@@ -415,6 +425,7 @@ export default function App() {
       {selected && (
         <RecipeModal
           recipe={selected}
+          pantry={pantry}
           isFav={favorites.has(selected.id)}
           onToggleFav={() => toggleFavorite(selected.id)}
           isOnList={onList.has(selected.id)}

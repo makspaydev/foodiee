@@ -3,11 +3,13 @@ import { MEALS, APPLIANCES } from './recipes.js'
 import { IMAGES } from './imageManifest.js'
 import { AFFILIATE_ENABLED, buyUrl, productName } from './affiliate.js'
 import { track } from './analytics.js'
+import { matchRecipe, hasPantryTags } from './pantryMatch.js'
 
 const imageSrc = (file) => `${import.meta.env.BASE_URL}images/${file}`
 
 export default function RecipeModal({
   recipe,
+  pantry,
   onClose,
   isFav,
   onToggleFav,
@@ -27,6 +29,10 @@ export default function RecipeModal({
 
   const appliance = APPLIANCES[recipe.appliance]
   const [shared, setShared] = useState(false)
+
+  // Pantry-aware: how much of this recipe you already have, and what's the gap.
+  const pantryActive = pantry && pantry.size > 0 && hasPantryTags(recipe)
+  const match = pantryActive ? matchRecipe(recipe, pantry) : null
 
   const shareRecipe = async () => {
     const url = `${window.location.origin}/?recipe=${recipe.id}`
@@ -105,6 +111,22 @@ export default function RecipeModal({
           <h2 className="modal-title">{recipe.title}</h2>
           <p className="modal-cuisine">{recipe.cuisine} cuisine</p>
 
+          {match && (
+            <p className="modal-pantry">
+              🥫 From your pantry: <strong>{match.haveCount}/{match.total}</strong> on hand
+              {match.missingCount > 0 ? (
+                <>
+                  {' '}· you'll buy <strong>{match.missingCount}</strong>:{' '}
+                  <span className="modal-pantry-gap">
+                    {match.missing.map((t) => t.canon).join(', ')}
+                  </span>
+                </>
+              ) : (
+                <> · you have everything! 🎉</>
+              )}
+            </p>
+          )}
+
           <button
             className={`btn list-toggle${isOnList ? ' on' : ''}`}
             onClick={onToggleList}
@@ -112,7 +134,11 @@ export default function RecipeModal({
           >
             {isOnList
               ? '✓ On your shopping list — tap to remove'
-              : '🛒 Add ingredients to shopping list'}
+              : match && match.missingCount > 0
+                ? `🛒 Add — buy just the ${match.missingCount} you're missing`
+                : match && match.missingCount === 0
+                  ? '🛒 Add to list — you have it all!'
+                  : '🛒 Add ingredients to shopping list'}
           </button>
 
           <div className="modal-stats">

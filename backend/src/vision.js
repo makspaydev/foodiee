@@ -2,6 +2,7 @@
 // frontend renders it identically. Accepts one or more images (base64) — a user
 // can snap the ingredient frame + the steps frame and we read across all of them.
 import fs from 'node:fs'
+import { normCanonLines } from './reel.js'
 
 const GEMINI_KEY = process.env.GEMINI_API_KEY || ''
 const GEMINI_MODEL = process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash'
@@ -39,9 +40,26 @@ const RECIPE_SCHEMA = {
     steps: { type: 'array', items: { type: 'string' } },
     tags: { type: 'array', items: { type: 'string' } },
     note: { type: 'string' },
+    canonLines: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          raw: { type: 'string' },
+          canon: { type: 'string' },
+          staple: { type: 'boolean' },
+        },
+        required: ['raw', 'canon', 'staple'],
+      },
+    },
   },
   required: ['isRecipe', 'hasIngredients', 'title', 'ingredients', 'steps'],
 }
+
+const CANON_INSTRUCTION =
+  '- Also output "canonLines": for EACH ingredient line, an object ' +
+  '{ raw (the line), canon (its main grocery item, lowercase singular common name — ' +
+  'yogurt not curd, capsicum not bell pepper), staple (true ONLY for salt, water, oil, sugar, pepper) }.\n'
 
 const clamp = (v, allowed, fb) => (allowed.includes(v) ? v : fb)
 
@@ -77,6 +95,7 @@ function normalize(parsed, idSeed) {
     steps,
     tags,
     note: String(parsed.note || '').trim(),
+    canonLines: normCanonLines(parsed),
     source: 'screenshot',
   }
 }
@@ -93,7 +112,8 @@ export async function recipeFromImages(images, idSeed = 'shot') {
     '- If only the finished dish or a title is shown (no ingredient list), set hasIngredients=false, still identify the dish title, and put a short explanation in "note" (e.g. "Only the finished dish is shown — no ingredient list in these frames").\n' +
     '- If it is not food at all, set isRecipe=false.\n' +
     '- Pick the PRIMARY appliance the dish is cooked on, from exactly: airfryer, steamer, mixer, oven, cooktop (stovetop/induction/kadai/tawa/pan), pressurecooker. In "equipment" list any OTHER appliances from that set also needed (omit the primary).\n' +
-    '- Write ingredient lines as "quantity + item" for grocery shopping; pick one food emoji.'
+    '- Write ingredient lines as "quantity + item" for grocery shopping; pick one food emoji.\n' +
+    CANON_INSTRUCTION
   const parts = [{ text: prompt }]
   for (const img of images) {
     parts.push({ inlineData: { mimeType: img.mimeType || 'image/png', data: img.data } })
@@ -138,7 +158,8 @@ export async function recipeFromDish(dish, idSeed = dish) {
     '- Provide a realistic ingredient list as "quantity + item" lines suitable for grocery shopping.\n' +
     '- Provide clear numbered steps.\n' +
     '- Pick the PRIMARY appliance from exactly: airfryer, steamer, mixer, oven, cooktop (stovetop/induction/kadai/tawa/pan), pressurecooker. In "equipment" list any OTHER appliances from that set also needed (omit the primary).\n' +
-    '- Pick one fitting food emoji. Set isRecipe=true and hasIngredients=true.'
+    '- Pick one fitting food emoji. Set isRecipe=true and hasIngredients=true.\n' +
+    CANON_INSTRUCTION
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {

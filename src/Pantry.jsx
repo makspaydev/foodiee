@@ -38,8 +38,8 @@ export default function Pantry({
   const matches = useMemo(() => matchAll(recipes, pantry), [recipes, pantry])
   const cookable = matches.filter((m) => m.missingCount === 0)
   const almost = matches.filter((m) => m.missingCount > 0 && m.missingCount <= 2)
-  // Only preview recipes the pantry actually overlaps with, closest first.
-  const preview = matches.filter((m) => m.haveCount > 0).slice(0, 8)
+  // Every recipe the pantry overlaps with, closest-to-cookable first.
+  const preview = matches.filter((m) => m.haveCount > 0)
 
   return (
     <div className="modal-overlay" onClick={onClose}>
