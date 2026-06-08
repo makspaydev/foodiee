@@ -36,6 +36,12 @@ We want approved access so each user can **connect their own Swiggy account** to
 and place a **Swiggy Instamart** order for their recipe ingredients, with explicit
 confirmation, without leaving the app.
 
+> **Note on multi-user access (not access-sharing):** every end-user authorises their
+> *own* Swiggy account via Swiggy's OAuth consent (PKCE). We never share, resell, or proxy
+> our own credentials — access is per-user and revocable. Foodiee is not an aggregation
+> layer; the Instamart flow is clearly branded as Swiggy Instamart, with accurate prices,
+> availability and a confirmation step before any order.
+
 Intended flow per user:
 1. User builds a shopping list from recipes in Foodiee.
 2. User taps **Connect Swiggy** → redirected to Swiggy's OAuth consent
@@ -59,6 +65,23 @@ Intended flow per user:
 
 (Exact-match HTTPS; we will register additional URIs through `builders@swiggy.in` if the
 backend domain changes.)
+
+## 4b. Infrastructure & operational details (per Builders Club checklist)
+
+- **Static IP / gateway IP(s):** The backend is not yet provisioned. It will run on a host
+  with a **static egress IP** (e.g., a small cloud VM / NAT gateway, India region); we will
+  provide the exact IP(s) for whitelisting during onboarding / the gradual rollout.
+- **Security contact:** shiva@foodiee.live
+- **Data handling & privacy declaration:** We store only an encrypted per-user OAuth token,
+  the user's selected delivery address id, and their shopping list — solely to build a cart.
+  No phone numbers, OTPs, or passwords are ever stored. Tokens are deleted on disconnect.
+  Full policy: https://foodiee.live/privacy
+- **Environment & infrastructure:** Frontend — React + Vite static site on GitHub Pages
+  (foodiee.live, HTTPS via Let's Encrypt). Backend (planned) — HTTPS only, OAuth client
+  secret and tokens in a managed secret store / encrypted DB, no secrets in the browser,
+  India region.
+- **Brand & attribution:** the ordering flow is clearly labelled "Swiggy Instamart" so users
+  always know they're interacting with Swiggy services.
 
 ## 5. Architecture & security posture
 

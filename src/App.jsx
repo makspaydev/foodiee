@@ -250,6 +250,9 @@ export default function App() {
           🍳 Foodiee — recipes for the <strong>Philips Airfryer</strong> &amp;{' '}
           <strong>Wipro Multi Cooker</strong>.
         </p>
+        <p className="footer-links">
+          <a href="/privacy">Privacy Policy</a>
+        </p>
       </footer>
 
       {selected && (
