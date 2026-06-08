@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { MEALS, APPLIANCES } from './recipes.js'
 import { IMAGES } from './imageManifest.js'
 import { AFFILIATE_ENABLED, buyUrl, productName } from './affiliate.js'
@@ -26,6 +26,27 @@ export default function RecipeModal({
   }, [onClose])
 
   const appliance = APPLIANCES[recipe.appliance]
+  const [shared, setShared] = useState(false)
+
+  const shareRecipe = async () => {
+    const url = `${window.location.origin}/?recipe=${recipe.id}`
+    const text = `${recipe.title} — an easy ${
+      recipe.appliance === 'airfryer' ? 'air fryer' : 'steamer'
+    } recipe on Foodiee 🍳`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${recipe.title} — Foodiee`, text, url })
+        track('recipe_share', { recipe_id: recipe.id, method: 'native' })
+      } else {
+        await navigator.clipboard.writeText(url)
+        setShared(true)
+        setTimeout(() => setShared(false), 1800)
+        track('recipe_share', { recipe_id: recipe.id, method: 'copy' })
+      }
+    } catch {
+      /* user cancelled the share sheet — ignore */
+    }
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -39,6 +60,15 @@ export default function RecipeModal({
         <button className="modal-close" onClick={onClose} aria-label="Close">
           ✕
         </button>
+        <button
+          className="modal-share"
+          onClick={shareRecipe}
+          aria-label="Share recipe"
+          title="Share recipe"
+        >
+          🔗
+        </button>
+        {shared && <div className="share-toast">🔗 Link copied!</div>}
         <button
           className={`modal-fav${isFav ? ' fav-on' : ''}`}
           onClick={onToggleFav}

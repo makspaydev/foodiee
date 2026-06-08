@@ -471,6 +471,21 @@ body {
   color: var(--ink);
 }
 
+.empty-suggest {
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+.empty-suggest a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.empty-suggest a:hover {
+  text-decoration: underline;
+}
+
 .btn {
   margin-top: 16px;
   border: none;
@@ -770,6 +785,45 @@ body {
 .modal-fav:hover {
   transform: scale(1.12);
   background: #fff;
+}
+
+.modal-share {
+  position: absolute;
+  top: 14px;
+  right: 102px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.modal-share:hover {
+  transform: scale(1.12);
+  background: #fff;
+}
+
+.share-toast {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .modal-hero {
@@ -1295,7 +1349,8 @@ body {
   /* Keep the close / favourite controls pinned to the viewport corner
      while the content scrolls beneath them. */
   .modal:not(.list-modal) .modal-close,
-  .modal:not(.list-modal) .modal-fav {
+  .modal:not(.list-modal) .modal-fav,
+  .modal:not(.list-modal) .modal-share {
     position: fixed;
   }
 

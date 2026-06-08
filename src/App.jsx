@@ -14,6 +14,13 @@ const FAV_KEY = 'foodiee:favorites'
 const LIST_KEY = 'foodiee:list'
 const CHECKED_KEY = 'foodiee:checked'
 
+// Pre-filled email for the "Suggest a recipe" links.
+const SUGGEST_MAILTO =
+  'mailto:shiva@foodiee.live?subject=' +
+  encodeURIComponent('Recipe suggestion for Foodiee 🍳') +
+  '&body=' +
+  encodeURIComponent("I'd love to see this recipe on Foodiee:\n\n")
+
 // Pick a random recipe matching a meal from a candidate list.
 function pickRandom(list, meal) {
   const pool = list.filter((r) => r.meals.includes(meal))
@@ -72,6 +79,23 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(CHECKED_KEY, JSON.stringify([...checked]))
   }, [checked])
+
+  // Open a recipe from a shared link (?recipe=<id>) on first load.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('recipe')
+    if (id) {
+      const r = recipes.find((x) => x.id === id)
+      if (r) setSelected(r)
+    }
+  }, [])
+
+  // Keep the URL in sync with the open recipe so it's always shareable.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (selected) url.searchParams.set('recipe', selected.id)
+    else url.searchParams.delete('recipe')
+    window.history.replaceState({}, '', url)
+  }, [selected])
 
   const toggleList = (id) => {
     const adding = !onList.has(id)
@@ -269,6 +293,13 @@ export default function App() {
         </p>
         <p className="footer-links">
           <a href="/privacy">Privacy Policy</a>
+          <span aria-hidden="true"> · </span>
+          <a
+            href={SUGGEST_MAILTO}
+            onClick={() => track('suggest_recipe_click', { location: 'footer' })}
+          >
+            💡 Suggest a recipe
+          </a>
         </p>
       </footer>
 
@@ -580,6 +611,17 @@ function EmptyState({ onReset, favsOnly }) {
       <button className="btn" onClick={onReset}>
         Clear filters
       </button>
+      {!favsOnly && (
+        <p className="empty-suggest">
+          Can't find what you're after?{' '}
+          <a
+            href={SUGGEST_MAILTO}
+            onClick={() => track('suggest_recipe_click', { location: 'empty' })}
+          >
+            Suggest a recipe →
+          </a>
+        </p>
+      )}
     </div>
   )
 }
