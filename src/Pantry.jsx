@@ -72,6 +72,14 @@ export default function Pantry({
                 aria-label="Search pantry ingredients"
               />
             </div>
+            {pantry.size > 0 && (
+              <div className="pantry-toolbar">
+                <span className="pantry-count">{pantry.size} selected</span>
+                <button className="link-btn" onClick={onClear}>
+                  Clear all
+                </button>
+              </div>
+            )}
           </div>
 
           {visibleCats.length === 0 ? (
@@ -143,11 +151,6 @@ export default function Pantry({
                 ))}
               </div>
             </>
-          )}
-          {pantry.size > 0 && (
-            <button className="link-btn pantry-clear" onClick={onClear}>
-              Clear pantry
-            </button>
           )}
         </div>
       </div>

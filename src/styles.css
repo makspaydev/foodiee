@@ -1918,6 +1918,20 @@ body {
   opacity: 0.6;
 }
 
+.pantry-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 2px;
+  font-size: 12.5px;
+}
+
+.pantry-count {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
 .pantry-cat {
   margin-bottom: 16px;
 }
